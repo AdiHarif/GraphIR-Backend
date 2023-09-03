@@ -1,0 +1,12 @@
+{
+  "name": "graphir-compiler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "links": "npm link typescript graphir ts-graph-extractor",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
