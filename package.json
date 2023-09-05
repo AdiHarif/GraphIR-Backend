@@ -2,11 +2,16 @@
   "name": "graphir-compiler",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "links": "npm link typescript graphir ts-graph-extractor",
+    "build": "tsc",
+    "start": "node build/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.5.9"
+  }
 }
