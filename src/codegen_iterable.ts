@@ -79,12 +79,13 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
             return { done: true, value: undefined };
         }
         let top = this.verticesStack[this.verticesStack.length - 1];
-        while (this.visited.has(top) || !this.processed.has(top)) {
+        while (top !== undefined && (this.visited.has(top) || !this.processed.has(top))) {
             if (this.visited.has(top)) {
                 this.verticesStack.pop();
-                continue;
             }
-            this.processStackTop();
+            else {
+                this.processStackTop();
+            }
             top = this.verticesStack[this.verticesStack.length - 1];
         }
         const nextVertex = this.verticesStack.pop()!;
