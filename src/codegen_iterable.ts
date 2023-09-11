@@ -12,6 +12,17 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
         this.verticesStack.push(graph.getStartVertex());
     }
 
+    private pushPhiDependencies(src: ir.BlockEndVertex) {
+        const merge = src.next as ir.MergeVertex;
+        for (let phiVertex of merge.phiVertices) {
+            for (let operand of phiVertex.operands) {
+                if (operand.srcBranch == src) {
+                    this.verticesStack.push(operand.value);
+                }
+            }
+        }
+    }
+
     private processStackTop() {
         const vertex = this.verticesStack[this.verticesStack.length - 1];
         if (this.processed.has(vertex)) {
@@ -33,34 +44,30 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 this.verticesStack.push((vertex as ir.BinaryOperationVertex).left!);
                 break;
             case ir.VertexKind.Phi:
-                this.verticesStack.push(...(vertex as ir.PhiVertex).operands.map(operand => operand.value));
+                // this.verticesStack.push(...(vertex as ir.PhiVertex).operands.map(operand => operand.value));
                 break;
             case ir.VertexKind.Start:
             case ir.VertexKind.Pass:
+            case ir.VertexKind.BlockStart:
                 currentTop = this.verticesStack.pop() as ir.NonTerminalControlVertex;
-                if (!(currentTop.next instanceof ir.MergeVertex)) {
-                    this.verticesStack.push(currentTop.next!);
-                }
+                this.verticesStack.push(currentTop.next!);
                 this.verticesStack.push(currentTop);
+                break;
+            case ir.VertexKind.BlockEnd:
+                this.pushPhiDependencies(vertex as ir.BlockEndVertex);
                 break;
             case ir.VertexKind.Branch:
                 const branch = this.verticesStack.pop() as ir.BranchVertex;
                 this.verticesStack.push(branch.merge!);
-                if (!(branch.falseNext instanceof ir.MergeVertex)) {
-                    this.verticesStack.push(branch.falseNext!);
-                }
-                if (!(branch.trueNext instanceof ir.MergeVertex)) {
-                    this.verticesStack.push(branch.trueNext!);
-                }
+                this.verticesStack.push(branch.falseNext!);
+                this.verticesStack.push(branch.trueNext!);
                 this.verticesStack.push(branch);
                 this.verticesStack.push(branch.condition!);
                 break
             case ir.VertexKind.Merge:
                 // TODO: support forward branches (i.e. loops)
                 const merge = this.verticesStack.pop() as ir.MergeVertex;
-                if (!(merge.next instanceof ir.MergeVertex)) {
-                    this.verticesStack.push(merge.next!);
-                }
+                this.verticesStack.push(merge.next!);
                 this.verticesStack.push(...merge.phiVertices);
                 this.verticesStack.push(merge);
                 break;
@@ -72,6 +79,8 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
             default:
                 throw new Error(`Unexpected vertex kind: ${vertex.kind}`);
         }
+        let y = 2;
+
     }
 
     next(): IteratorResult<ir.Vertex> {

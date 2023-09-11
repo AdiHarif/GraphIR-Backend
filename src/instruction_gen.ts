@@ -23,27 +23,6 @@ const comparisonOperatorsMap = new Map<ir.BinaryOperation, ins.LlvmCondition>([
 export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruction>> {
     constructor(private readonly namesMap: Map<ir.Vertex, ins.NamedValue>) { }
 
-    private isBlockStart(vertex: ir.ControlVertex): boolean {
-        return vertex.inEdges.filter(e => e.source instanceof ir.BranchVertex).length > 0;
-    }
-
-    private isBlockEnd(vertex: ir.ControlVertex): boolean {
-        return vertex instanceof ir.NonTerminalControlVertex && vertex.next instanceof ir.MergeVertex;
-    }
-
-    private wrapBlockBounderies(vertex: ir.ControlVertex, instructions: Array<ins.Instruction>): Array<ins.Instruction> {
-        let out = [...instructions];
-        if (this.isBlockStart(vertex)) {
-            const labelInstruction = new ins.LabelInstruction(this.namesMap.get(vertex)!);
-            out = [labelInstruction, ...out];
-        }
-        if (this.isBlockEnd(vertex)) {
-            const jumpInstruction = new ins.JumpInstruction(this.namesMap.get((vertex as ir.NonTerminalControlVertex).next!)!);
-            out.push(jumpInstruction);
-        }
-        return out;
-    }
-
     visitLiteralVertex(vertex: ir.LiteralVertex): Array<ins.Instruction> {
         const instruction = new ins.BinaryOperationInstruction(
             this.namesMap.get(vertex)!,
@@ -151,8 +130,18 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     }
 
     visitPassVertex(vertex: ir.PassVertex): Array<ins.Instruction> {
-        return this.wrapBlockBounderies(vertex, []);
+        return [];
 
+    }
+
+    visitBlockBeginVertex(vertex: ir.BlockBeginVertex): ins.Instruction[] {
+        const instruction = new ins.LabelInstruction(this.namesMap.get(vertex)!);
+        return [instruction];
+    }
+
+    visitBlockEndVertex(vertex: ir.BlockEndVertex): Array<ins.Instruction> {
+        const instruction = new ins.JumpInstruction(this.namesMap.get(vertex.next!)!);
+        return [instruction];
     }
 
     visitReturnVertex(vertex: ir.ReturnVertex): Array<ins.Instruction> {
@@ -161,7 +150,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             ins.LlvmType.F64,
             this.namesMap.get(vertex.value!)!
         );
-        return this.wrapBlockBounderies(vertex, [instruction]);
+        return [instruction];
     }
 
     visitBranchVertex(vertex: ir.BranchVertex): Array<ins.Instruction> {
@@ -170,12 +159,12 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             this.namesMap.get(vertex.trueNext!)!,
             this.namesMap.get(vertex.falseNext!)!
         );
-        return this.wrapBlockBounderies(vertex, [instruction]);
+        return [instruction];
     }
 
     visitMergeVertex(vertex: ir.MergeVertex): Array<ins.Instruction> {
         const instruction = new ins.LabelInstruction(this.namesMap.get(vertex)!);
-        return this.wrapBlockBounderies(vertex, [instruction]);
+        return [instruction];
     }
 
     visitAllocationVertex(vertex: ir.AllocationVertex): Array<ins.Instruction> {
