@@ -12,7 +12,7 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
         this.verticesStack.push(graph.getStartVertex());
     }
 
-    private pushPhiDependencies(src: ir.BlockEndVertex) {
+    private pushPhiReachers(src: ir.BlockEndVertex) {
         const merge = src.next as ir.MergeVertex;
         for (let phiVertex of merge.phiVertices) {
             for (let operand of phiVertex.operands) {
@@ -21,6 +21,38 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 }
             }
         }
+    }
+
+    private getDataDependencies(vertex: ir.Vertex): Array<ir.Vertex> {
+        const out = [vertex];
+        vertex.outEdges
+            .filter(edge => edge.category == ir.EdgeCategory.Data)
+            .map(edge => edge.target)
+            .forEach(vertex => out.push(...this.getDataDependencies(vertex)));
+        return out;
+    }
+
+    private pushPhiDominators(branch: ir.BranchVertex) {
+        const reachingMap = new Map<ir.Vertex, Set<ir.Vertex>>();
+        const merge = branch.merge as ir.MergeVertex;
+
+        for (let phiVertex of merge.phiVertices) {
+            for (let operand of phiVertex.operands) {
+                if (!reachingMap.has(operand.srcBranch)) {
+                    reachingMap.set(operand.srcBranch, new Set<ir.Vertex>());
+                }
+                const set = reachingMap.get(operand.srcBranch)!;
+                this.getDataDependencies(operand.value)
+                    .filter(vertex => !this.visited.has(vertex))
+                    .forEach(vertex => set.add(vertex));
+            }
+        }
+
+        const dominators = [...reachingMap.values()].reduce((prev, curr) => {
+            return new Set([...prev].filter(x => curr.has(x)));
+        });
+
+        dominators.forEach(vertex => this.verticesStack.push(vertex));
     }
 
     private processStackTop() {
@@ -54,7 +86,7 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 this.verticesStack.push(currentTop);
                 break;
             case ir.VertexKind.BlockEnd:
-                this.pushPhiDependencies(vertex as ir.BlockEndVertex);
+                this.pushPhiReachers(vertex as ir.BlockEndVertex);
                 break;
             case ir.VertexKind.Branch:
                 const branch = this.verticesStack.pop() as ir.BranchVertex;
@@ -63,6 +95,7 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 this.verticesStack.push(branch.trueNext!);
                 this.verticesStack.push(branch);
                 this.verticesStack.push(branch.condition!);
+                this.pushPhiDominators(branch);
                 break
             case ir.VertexKind.Merge:
                 // TODO: support forward branches (i.e. loops)
