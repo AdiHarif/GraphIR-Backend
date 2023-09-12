@@ -6,6 +6,7 @@
   "scripts": {
     "links": "npm link typescript graphir ts-graph-extractor",
     "build": "tsc",
+    "build:watch": "tsc -w",
     "start": "node build/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
