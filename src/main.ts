@@ -2,10 +2,10 @@
 import * as ir from 'graphir'
 import { extractFromPath } from 'ts-graph-extractor'
 
-import { CodeGenIterable } from './codegen_iterable';
-import { allocateNames } from './names_allocator';
-import { InstructionGenVisitor } from './instruction_gen';
-import { instructionToString } from './llvm_instructions/string_instruction';
+import { CodeGenIterable } from './codegen_iterable.js';
+import { allocateNames } from './names_allocator.js';
+import { InstructionGenVisitor } from './instruction_gen.js';
+import { instructionToString } from './llvm_instructions/string_instruction.js';
 
 function generateLlvmIr(graph: ir.Graph): void {
     const names = allocateNames(graph);

@@ -1,6 +1,6 @@
 
-import * as ins from "./instruction";
-import { InstructionVisitor } from "./instruction_visitor";
+import * as ins from "./instruction.js";
+import { InstructionVisitor } from "./instruction_visitor.js";
 
 function valueToString(value: ins.Value, type: ins.LlvmType): string {
     if (typeof value === "string") {

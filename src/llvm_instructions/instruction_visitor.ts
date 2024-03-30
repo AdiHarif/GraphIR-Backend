@@ -1,5 +1,5 @@
 
-import * as ins from "./instruction";
+import * as ins from "./instruction.js";
 
 export interface InstructionVisitor<T> {
     visitBinaryOperationInstruction(instruction: ins.BinaryOperationInstruction): T;

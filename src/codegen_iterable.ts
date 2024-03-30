@@ -1,5 +1,4 @@
 
-import { assert } from 'console';
 import * as ir from 'graphir';
 
 class CodeGenIterator implements Iterator<ir.Vertex> {

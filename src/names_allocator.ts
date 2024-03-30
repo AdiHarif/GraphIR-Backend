@@ -3,8 +3,8 @@ import assert from 'assert';
 
 import * as ir from 'graphir';
 
-import { NamedValue } from './llvm_instructions/instruction';
-import { CodeGenIterable } from './codegen_iterable';
+import { NamedValue } from './llvm_instructions/instruction.js';
+import { CodeGenIterable } from './codegen_iterable.js';
 
 export function allocateNames(graph: ir.Graph): Map<ir.Vertex, NamedValue> {
     const map = new Map<ir.Vertex, NamedValue>();

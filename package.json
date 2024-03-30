@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
+  "type":"module",
   "scripts": {
     "preinstall": "git submodule update --init --recursive && pushd submodules/TS-Graph-Extractor && npm install && npm run build",
     "build": "tsc",

@@ -1,5 +1,5 @@
 
-import {InstructionVisitor} from './instruction_visitor'
+import {InstructionVisitor} from './instruction_visitor.js'
 
 export type Register = string;
 export type Parameter = string;

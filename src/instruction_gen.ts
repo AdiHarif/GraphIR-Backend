@@ -1,7 +1,7 @@
 
 import * as ir from "graphir";
 
-import * as ins from "./llvm_instructions/instruction";
+import * as ins from "./llvm_instructions/instruction.js";
 
 const numericOperatorsMap = new Map<ir.BinaryOperation, ins.LlvmNumericOperation>([
     [ir.BinaryOperation.Add, ins.LlvmNumericOperation.Add],
