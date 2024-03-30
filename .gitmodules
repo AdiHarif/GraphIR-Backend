@@ -1,0 +1,3 @@
+[submodule "submodules/TS-Graph-Extractor"]
+	path = submodules/TS-Graph-Extractor
+	url = https://github.com/AdiHarif/TS-Graph-Extractor.git

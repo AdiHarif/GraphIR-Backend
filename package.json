@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "links": "npm link typescript graphir ts-graph-extractor",
+    "preinstall": "git submodule update --init --recursive && pushd submodules/TS-Graph-Extractor && npm install && npm run build",
     "build": "tsc",
     "build:watch": "tsc -w",
     "start": "node build/main.js",
@@ -14,5 +14,8 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.5.9"
+  },
+  "dependencies": {
+    "ts-graph-extractor": "file:submodules/TS-Graph-Extractor"
   }
 }
