@@ -21,7 +21,7 @@ function generateLlvmIr(graph: ir.Graph): void {
 
 function main() {
     const graph = extractFromPath('tmp4.ts');
-    graph.setStartVertex(graph.vertices[1] as ir.StartVertex);
+    graph.setStartVertex(graph.subgraphs[0].vertices[0] as ir.StartVertex);
     generateLlvmIr(graph);
 }
 
