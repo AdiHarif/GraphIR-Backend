@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
-  "type":"module",
+  "type": "module",
   "scripts": {
     "preinstall": "git submodule update --init --recursive && pushd submodules/TS-Graph-Extractor && npm install && npm run build",
     "build": "tsc",
@@ -17,6 +17,7 @@
     "@types/node": "^20.5.9"
   },
   "dependencies": {
-    "ts-graph-extractor": "file:submodules/TS-Graph-Extractor"
+    "ts-graph-extractor": "file:submodules/TS-Graph-Extractor",
+    "yargs": "^17.7.2"
   }
 }
