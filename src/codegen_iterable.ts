@@ -85,6 +85,7 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 this.verticesStack.push(currentTop);
                 break;
             case ir.VertexKind.BlockEnd:
+                this.verticesStack.push((vertex as ir.BlockEndVertex).next!);
                 this.pushPhiReachers(vertex as ir.BlockEndVertex);
                 break;
             case ir.VertexKind.Branch:
@@ -97,11 +98,11 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 this.pushPhiDominators(branch);
                 break
             case ir.VertexKind.Merge:
-                // TODO: support forward branches (i.e. loops)
                 const merge = this.verticesStack.pop() as ir.MergeVertex;
                 this.verticesStack.push(merge.next!);
                 this.verticesStack.push(...merge.phiVertices);
                 this.verticesStack.push(merge);
+                this.verticesStack.push(merge.branch!);
                 break;
             case ir.VertexKind.Return:
                 if ((vertex as ir.ReturnVertex).value != undefined) {
