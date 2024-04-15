@@ -108,6 +108,14 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                     this.verticesStack.push((vertex as ir.ReturnVertex).value!);
                 }
                 break;
+            case ir.VertexKind.Call:
+                const call = vertex as ir.CallVertex;
+                this.verticesStack.push(call.next!);
+                this.verticesStack.push(...call.args!);
+                if (call.callerObject) {
+                    this.verticesStack.push(call.callerObject);
+                }
+                break;
             default:
                 throw new Error(`Unexpected vertex kind: ${vertex.kind}`);
         }
