@@ -22,12 +22,16 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
         }
     }
 
-    private getDataDependencies(vertex: ir.Vertex): Array<ir.Vertex> {
+    private getDataDependencies(vertex: ir.Vertex, visited: Set<ir.Vertex>): Array<ir.Vertex> {
+        if (visited.has(vertex)) {
+            return [];
+        }
+        visited.add(vertex);
         const out = [vertex];
         vertex.outEdges
             .filter(edge => edge.category == ir.EdgeCategory.Data)
             .map(edge => edge.target)
-            .forEach(vertex => out.push(...this.getDataDependencies(vertex)));
+            .forEach(vertex => out.push(...this.getDataDependencies(vertex, visited)));
         return out;
     }
 
@@ -41,7 +45,7 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                     reachingMap.set(operand.srcBranch, new Set<ir.Vertex>());
                 }
                 const set = reachingMap.get(operand.srcBranch)!;
-                this.getDataDependencies(operand.value)
+                this.getDataDependencies(operand.value, new Set<ir.Vertex>())
                     .filter(vertex => !this.visited.has(vertex))
                     .forEach(vertex => set.add(vertex));
             }
