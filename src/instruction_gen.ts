@@ -17,7 +17,8 @@ const bitwiseOperatorsMap = new Map<ir.BinaryOperation, ins.LlvmNumericOperation
 
 const comparisonOperatorsMap = new Map<ir.BinaryOperation, ins.LlvmCondition>([
     [ir.BinaryOperation.EqualEqual, ins.LlvmCondition.Eq],
-    [ir.BinaryOperation.NotEqual, ins.LlvmCondition.Ne]
+    [ir.BinaryOperation.NotEqual, ins.LlvmCondition.Ne],
+    [ir.BinaryOperation.LessThan, ins.LlvmCondition.Lt],
 ]);
 
 export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruction>> {

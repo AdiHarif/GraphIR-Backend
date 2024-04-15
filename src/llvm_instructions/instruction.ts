@@ -20,6 +20,7 @@ export enum LlvmNumericOperation {
 export enum LlvmCondition {
     Eq = 'oeq',
     Ne = 'one',
+    Lt = 'olt',
 }
 
 export enum LlvmType {
