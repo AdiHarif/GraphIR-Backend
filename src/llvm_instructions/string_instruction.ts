@@ -70,6 +70,24 @@ class InstructionStringVisitor implements InstructionVisitor<string> {
     visitCastInstruction(instruction: ins.CastInstruction): string {
         return `${instruction.result} = ${instruction.operation} ${instruction.srcType} ${valueToString(instruction.value, instruction.srcType)} to ${instruction.dstType}`;
     }
+
+    visitFunction(instruction: ins.Function): string {
+        let out = `define ${instruction.functionType.result} @${instruction.name}`;
+        if (instruction.functionType.parameters.length > 0) {
+            out += `(${instruction.functionType.parameters.join(", ")})`;
+        } else {
+            out += "()";
+        }
+        out += " {\n";
+        for (const i of instruction.instructions) {
+            if (!(i instanceof ins.LabelInstruction)) {
+                out += "\t";
+            }
+            out += `${i.accept(this)}\n`;
+        }
+        out += "}"
+        return out;
+    }
 }
 
 const instructionStringVisitor = new InstructionStringVisitor();

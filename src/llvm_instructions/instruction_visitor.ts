@@ -12,4 +12,5 @@ export interface InstructionVisitor<T> {
     visitPhiInstruction(instruction: ins.PhiInstruction): T;
     visitComparisonInstruction(instruction: ins.ComparisonInstruction): T;
     visitCastInstruction(instruction: ins.CastInstruction): T;
+    visitFunction(instruction: ins.Function): T;
 }

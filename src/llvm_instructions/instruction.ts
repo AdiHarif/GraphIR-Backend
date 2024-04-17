@@ -1,6 +1,6 @@
 
 import {InstructionVisitor} from './instruction_visitor.js'
-import { LlvmType, LlvmPrimitiveType } from './type.js'
+import { LlvmType, LlvmPrimitiveType, LlvmFunctionType } from './type.js'
 
 
 export type Register = string;
@@ -158,5 +158,17 @@ export class CastInstruction implements Instruction {
 
     accept<T>(visitor: InstructionVisitor<T>): T {
         return visitor.visitCastInstruction(this);
+    }
+}
+
+export class Function implements Instruction {
+    public readonly instructions: Array<Instruction> = [];
+    constructor(
+        public readonly name: string,
+        public readonly functionType: LlvmFunctionType
+    ) {}
+
+    accept<T>(visitor: InstructionVisitor<T>): T {
+        return visitor.visitFunction(this);
     }
 }

@@ -6,10 +6,12 @@ import { hideBin } from 'yargs/helpers';
 import * as ir from 'graphir'
 import { extractFromPath } from 'ts-graph-extractor'
 
+import { Function } from './llvm_instructions/instruction.js';
 import { CodeGenIterable } from './codegen_iterable.js';
 import { allocateNames } from './names_allocator.js';
 import { InstructionGenVisitor } from './instruction_gen.js';
 import { instructionToString } from './llvm_instructions/string_instruction.js';
+import { LlvmFunctionType, LlvmPrimitiveType } from './llvm_instructions/type.js';
 
 function parseCliArgs() {
     return yargs(hideBin(process.argv))
@@ -21,19 +23,33 @@ function parseCliArgs() {
 const args = parseCliArgs();
 
 function generateLlvmIr(graph: ir.Graph): void {
+    for (const subgraph of graph.subgraphs) {
+        generateLlvmIr(subgraph);
+    }
+    let function_name;
+    if (graph.getStartVertex().inEdges.length > 0) {
+        function_name = (graph.getStartVertex().inEdges[0].source as ir.SymbolVertex).name;
+    }
+    else {
+        function_name = 'main';
+    }
+    const function_type: LlvmFunctionType = {
+        result: LlvmPrimitiveType.Void,
+        parameters: []
+    }; //TODO: Add parameters
+    const llvm_function = new Function(function_name, function_type);
     const names = allocateNames(graph);
     const instructionGenVisitor = new InstructionGenVisitor(names);
     const iterableGraph = new CodeGenIterable(graph);
     for (let vertex of iterableGraph) {
         const instructions = vertex.accept(instructionGenVisitor);
-        for (let instruction of instructions) {
-            if (!args['out-file']) {
-                console.log(instructionToString(instruction));
-            }
-            else {
-                fs.appendFileSync(args['out-file'], instructionToString(instruction) + '\n');
-            }
-        }
+        llvm_function.instructions.push(...instructions);
+    }
+    if (!args['out-file']) {
+        console.log(instructionToString(llvm_function));
+    }
+    else {
+        fs.appendFileSync(args['out-file'], instructionToString(llvm_function) + '\n');
     }
 }
 
@@ -42,7 +58,6 @@ function main() {
     if (args['out-file']) {
         fs.writeFileSync(args['out-file'], '');
     }
-    graph.setStartVertex(graph.subgraphs[0].vertices[0] as ir.StartVertex);
     generateLlvmIr(graph);
 }
 
