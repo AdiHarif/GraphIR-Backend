@@ -1,5 +1,7 @@
 
 import {InstructionVisitor} from './instruction_visitor.js'
+import { LlvmType, LlvmPrimitiveType } from './type.js'
+
 
 export type Register = string;
 export type Parameter = string;
@@ -21,13 +23,6 @@ export enum LlvmCondition {
     Eq = 'oeq',
     Ne = 'one',
     Lt = 'olt',
-}
-
-export enum LlvmType {
-    Void = 'void',
-    F64 = 'double',
-    I1 = 'i1',
-    I64 = 'i64'
 }
 
 export enum LlvmCastOperation {
@@ -69,7 +64,7 @@ export class LabelInstruction implements Instruction {
 }
 
 export class VoidCallInstruction implements Instruction {
-    static readonly type = LlvmType.Void;
+    static readonly type = LlvmPrimitiveType.Void;
 
     constructor(
         public name: string,

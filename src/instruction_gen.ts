@@ -2,6 +2,7 @@
 import * as ir from "graphir";
 
 import * as ins from "./llvm_instructions/instruction.js";
+import * as type from "./llvm_instructions/type.js";
 
 const numericOperatorsMap = new Map<ir.BinaryOperation, ins.LlvmNumericOperation>([
     [ir.BinaryOperation.Add, ins.LlvmNumericOperation.Add],
@@ -27,7 +28,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     visitLiteralVertex(vertex: ir.LiteralVertex): Array<ins.Instruction> {
         const instruction = new ins.BinaryOperationInstruction(
             this.namesMap.get(vertex)!,
-            ins.LlvmType.F64,
+            type.LlvmPrimitiveType.F64,
             ins.LlvmNumericOperation.Add,
             0,
             (vertex.value as number)!
@@ -57,7 +58,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         if (numericOperatorsMap.has(op)) {
             out.push(new ins.BinaryOperationInstruction(
                 this.namesMap.get(vertex)!,
-                ins.LlvmType.F64,
+                type.LlvmPrimitiveType.F64,
                 numericOperatorsMap.get(op)!,
                 this.namesMap.get(vertex.left!)!,
                 this.namesMap.get(vertex.right!)!
@@ -78,20 +79,20 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             const castLeft = new ins.CastInstruction(
                 tmpReg0,
                 ins.LlvmCastOperation.FpToSi,
-                ins.LlvmType.F64,
+                type.LlvmPrimitiveType.F64,
                 this.namesMap.get(vertex.left!)!,
-                ins.LlvmType.I64
+                type.LlvmPrimitiveType.I64
             );
             const castRight = new ins.CastInstruction(
                 tmpReg1,
                 ins.LlvmCastOperation.FpToSi,
-                ins.LlvmType.F64,
+                type.LlvmPrimitiveType.F64,
                 this.namesMap.get(vertex.right!)!,
-                ins.LlvmType.I64
+                type.LlvmPrimitiveType.I64
             );
             const operation = new ins.BinaryOperationInstruction(
                 tmpReg2,
-                ins.LlvmType.I64,
+                type.LlvmPrimitiveType.I64,
                 bitwiseOperatorsMap.get(op)!,
                 tmpReg0,
                 tmpReg1
@@ -99,9 +100,9 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             const castOut = new ins.CastInstruction(
                 this.namesMap.get(vertex)!,
                 ins.LlvmCastOperation.SiToFp,
-                ins.LlvmType.I64,
+                type.LlvmPrimitiveType.I64,
                 tmpReg2,
-                ins.LlvmType.F64
+                type.LlvmPrimitiveType.F64
             );
             out.push(castLeft, castRight, operation, castOut);
         }
@@ -120,7 +121,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         );
         const instruction = new ins.PhiInstruction(
             this.namesMap.get(vertex)!,
-            ins.LlvmType.F64,
+            type.LlvmPrimitiveType.F64,
             operands as Array<[ins.Value, ins.Label]>
         );
         return [instruction];
@@ -148,7 +149,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     visitReturnVertex(vertex: ir.ReturnVertex): Array<ins.Instruction> {
         //TODO: support void return
         const instruction = new ins.ReturnInstruction(
-            ins.LlvmType.F64,
+            type.LlvmPrimitiveType.F64,
             this.namesMap.get(vertex.value!)!
         );
         return [instruction];

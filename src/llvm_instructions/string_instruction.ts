@@ -1,26 +1,27 @@
 
 import * as ins from "./instruction.js";
+import { LlvmType, LlvmPrimitiveType } from "./type.js";
 import { InstructionVisitor } from "./instruction_visitor.js";
 
-function valueToString(value: ins.Value, type: ins.LlvmType): string {
+function valueToString(value: ins.Value, type: LlvmType): string {
     if (typeof value === "string") {
         return value;
     }
     let out;
     switch (type) {
-        case ins.LlvmType.I1:
+        case LlvmPrimitiveType.I1:
             out = value ? "1" : "0";
             break;
-        case ins.LlvmType.I64:
+        case LlvmPrimitiveType.I64:
             out = `${Math.floor(value as number)}`;
             break;
-        case ins.LlvmType.F64:
+        case LlvmPrimitiveType.F64:
             out = `${value}`;
             if (Number.isInteger(value)) {
                 out += ".0";
             }
             break;
-        case ins.LlvmType.Void:
+        case LlvmPrimitiveType.Void:
             out = "void";
             break;
         default:
@@ -63,7 +64,7 @@ class InstructionStringVisitor implements InstructionVisitor<string> {
     }
 
     visitComparisonInstruction(instruction: ins.ComparisonInstruction): string {
-        return `${instruction.result} = fcmp ${instruction.condition} ${ins.LlvmType.F64} ${instruction.left}, ${instruction.right}`;
+        return `${instruction.result} = fcmp ${instruction.condition} ${LlvmPrimitiveType.F64} ${instruction.left}, ${instruction.right}`;
     }
 
     visitCastInstruction(instruction: ins.CastInstruction): string {
