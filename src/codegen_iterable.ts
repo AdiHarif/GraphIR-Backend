@@ -89,7 +89,9 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 this.verticesStack.push(currentTop);
                 break;
             case ir.VertexKind.BlockEnd:
+                currentTop = this.verticesStack.pop() as ir.NonTerminalControlVertex;
                 this.verticesStack.push((vertex as ir.BlockEndVertex).next!);
+                this.verticesStack.push(currentTop);
                 this.pushPhiReachers(vertex as ir.BlockEndVertex);
                 break;
             case ir.VertexKind.Branch:
@@ -103,10 +105,18 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 break
             case ir.VertexKind.Merge:
                 const merge = this.verticesStack.pop() as ir.MergeVertex;
-                this.verticesStack.push(merge.next!);
-                this.verticesStack.push(...merge.phiVertices);
-                this.verticesStack.push(merge);
-                this.verticesStack.push(merge.branch!);
+                if (!this.processed.has(merge.branch!)) {
+                    this.verticesStack.push(merge.branch!);
+                    break;
+                }
+                const predecessors = merge.inEdges
+                    .filter(edge => edge.category == ir.EdgeCategory.Control)
+                    .map(edge => edge.source);
+                if (!predecessors.some(pred => !this.processed.has(pred))) { // all predecessors are processed
+                    this.verticesStack.push(merge.next!);
+                    this.verticesStack.push(...merge.phiVertices);
+                    this.verticesStack.push(merge);
+                }
                 break;
             case ir.VertexKind.Return:
                 if ((vertex as ir.ReturnVertex).value != undefined) {
