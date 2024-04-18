@@ -107,6 +107,7 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 const merge = this.verticesStack.pop() as ir.MergeVertex;
                 if (!this.processed.has(merge.branch!)) {
                     this.verticesStack.push(merge.branch!);
+                    this.processed.delete(merge);
                     break;
                 }
                 const predecessors = merge.inEdges
@@ -116,7 +117,9 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                     this.verticesStack.push(merge.next!);
                     this.verticesStack.push(...merge.phiVertices);
                     this.verticesStack.push(merge);
+                    break;
                 }
+                this.processed.delete(merge);
                 break;
             case ir.VertexKind.Return:
                 if ((vertex as ir.ReturnVertex).value != undefined) {
