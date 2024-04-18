@@ -152,6 +152,9 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
             }
             top = this.verticesStack[this.verticesStack.length - 1];
         }
+        if (top === undefined) {
+            return { done: true, value: undefined };
+        }
         const nextVertex = this.verticesStack.pop()!;
         this.visited.add(nextVertex);
         return { done: false, value: nextVertex };
