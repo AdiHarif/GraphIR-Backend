@@ -128,7 +128,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     }
 
     visitStartVertex(vertex: ir.StartVertex): Array<ins.Instruction> {
-        return [];
+        return [new ins.LabelInstruction(this.namesMap.get(vertex)!)];
     }
 
     visitPassVertex(vertex: ir.PassVertex): Array<ins.Instruction> {
