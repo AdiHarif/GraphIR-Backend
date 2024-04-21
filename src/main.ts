@@ -11,12 +11,14 @@ import { CodeGenIterable } from './codegen_iterable.js';
 import { allocateNames } from './names_allocator.js';
 import { InstructionGenVisitor } from './instruction_gen.js';
 import { instructionToString } from './llvm_instructions/string_instruction.js';
-import { LlvmFunctionType, LlvmPrimitiveType } from './llvm_instructions/type.js';
+import { LlvmFunctionType, LlvmPrimitiveType, irTypeToLlvmType } from './llvm_instructions/type.js';
+import { hydrateTypesFromFiles } from './type_hydration.js';
 
 function parseCliArgs() {
     return yargs(hideBin(process.argv))
         .option('input-file', { alias: 'i', type: 'string', description: 'Input file', demandOption: true })
         .option('out-file', { alias: 'o', type: 'string', description: 'Output file'})
+        .option('types-file', { alias: 't', type: 'string', description: 'Types file', demandOption: true})
         .parseSync();
 }
 
@@ -33,10 +35,7 @@ function generateLlvmIr(graph: ir.Graph): void {
     else {
         function_name = 'main';
     }
-    const function_type: LlvmFunctionType = {
-        result: LlvmPrimitiveType.Void,
-        parameters: []
-    }; //TODO: Add parameters
+    const function_type = irTypeToLlvmType(graph.verifiedType!) as LlvmFunctionType;
     const llvm_function = new Function(function_name, function_type);
     const names = allocateNames(graph);
     const instructionGenVisitor = new InstructionGenVisitor(names);
@@ -55,6 +54,7 @@ function generateLlvmIr(graph: ir.Graph): void {
 
 function main() {
     const graph = extractFromPath(args['input-file']);
+    hydrateTypesFromFiles(graph, args['types-file']);
     if (args['out-file']) {
         fs.writeFileSync(args['out-file'], '');
     }

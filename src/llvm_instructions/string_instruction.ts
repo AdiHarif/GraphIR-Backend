@@ -12,9 +12,11 @@ function valueToString(value: ins.Value, type: LlvmType): string {
         case LlvmPrimitiveType.I1:
             out = value ? "1" : "0";
             break;
+        case LlvmPrimitiveType.I32:
         case LlvmPrimitiveType.I64:
             out = `${Math.floor(value as number)}`;
             break;
+        case LlvmPrimitiveType.F32:
         case LlvmPrimitiveType.F64:
             out = `${value}`;
             if (Number.isInteger(value)) {

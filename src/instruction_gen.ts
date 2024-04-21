@@ -2,7 +2,7 @@
 import * as ir from "graphir";
 
 import * as ins from "./llvm_instructions/instruction.js";
-import * as type from "./llvm_instructions/type.js";
+import { irTypeToLlvmType, LlvmPrimitiveType } from "./llvm_instructions/type.js";
 
 const numericOperatorsMap = new Map<ir.BinaryOperation, ins.LlvmNumericOperation>([
     [ir.BinaryOperation.Add, ins.LlvmNumericOperation.Add],
@@ -28,7 +28,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     visitLiteralVertex(vertex: ir.LiteralVertex): Array<ins.Instruction> {
         const instruction = new ins.BinaryOperationInstruction(
             this.namesMap.get(vertex)!,
-            type.LlvmPrimitiveType.F64,
+            irTypeToLlvmType(vertex.verifiedType!),
             ins.LlvmNumericOperation.Add,
             0,
             (vertex.value as number)!
@@ -58,7 +58,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         if (numericOperatorsMap.has(op)) {
             out.push(new ins.BinaryOperationInstruction(
                 this.namesMap.get(vertex)!,
-                type.LlvmPrimitiveType.F64,
+                irTypeToLlvmType(vertex.verifiedType!),
                 numericOperatorsMap.get(op)!,
                 this.namesMap.get(vertex.left!)!,
                 this.namesMap.get(vertex.right!)!
@@ -72,40 +72,40 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
                 this.namesMap.get(vertex.right!)!
             ));
         }
-        else if (bitwiseOperatorsMap.has(op)) {
-            const tmpReg0 = `${this.namesMap.get(vertex)!}.0`;
-            const tmpReg1 = `${this.namesMap.get(vertex)!}.1`;
-            const tmpReg2 = `${this.namesMap.get(vertex)!}.2`;
-            const castLeft = new ins.CastInstruction(
-                tmpReg0,
-                ins.LlvmCastOperation.FpToSi,
-                type.LlvmPrimitiveType.F64,
-                this.namesMap.get(vertex.left!)!,
-                type.LlvmPrimitiveType.I64
-            );
-            const castRight = new ins.CastInstruction(
-                tmpReg1,
-                ins.LlvmCastOperation.FpToSi,
-                type.LlvmPrimitiveType.F64,
-                this.namesMap.get(vertex.right!)!,
-                type.LlvmPrimitiveType.I64
-            );
-            const operation = new ins.BinaryOperationInstruction(
-                tmpReg2,
-                type.LlvmPrimitiveType.I64,
-                bitwiseOperatorsMap.get(op)!,
-                tmpReg0,
-                tmpReg1
-            );
-            const castOut = new ins.CastInstruction(
-                this.namesMap.get(vertex)!,
-                ins.LlvmCastOperation.SiToFp,
-                type.LlvmPrimitiveType.I64,
-                tmpReg2,
-                type.LlvmPrimitiveType.F64
-            );
-            out.push(castLeft, castRight, operation, castOut);
-        }
+        // else if (bitwiseOperatorsMap.has(op)) {
+        //     const tmpReg0 = `${this.namesMap.get(vertex)!}.0`;
+        //     const tmpReg1 = `${this.namesMap.get(vertex)!}.1`;
+        //     const tmpReg2 = `${this.namesMap.get(vertex)!}.2`;
+        //     const castLeft = new ins.CastInstruction(
+        //         tmpReg0,
+        //         ins.LlvmCastOperation.FpToSi,
+        //         type.LlvmPrimitiveType.F64,
+        //         this.namesMap.get(vertex.left!)!,
+        //         type.LlvmPrimitiveType.I64
+        //     );
+        //     const castRight = new ins.CastInstruction(
+        //         tmpReg1,
+        //         ins.LlvmCastOperation.FpToSi,
+        //         type.LlvmPrimitiveType.F64,
+        //         this.namesMap.get(vertex.right!)!,
+        //         type.LlvmPrimitiveType.I64
+        //     );
+        //     const operation = new ins.BinaryOperationInstruction(
+        //         tmpReg2,
+        //         type.LlvmPrimitiveType.I64,
+        //         bitwiseOperatorsMap.get(op)!,
+        //         tmpReg0,
+        //         tmpReg1
+        //     );
+        //     const castOut = new ins.CastInstruction(
+        //         this.namesMap.get(vertex)!,
+        //         ins.LlvmCastOperation.SiToFp,
+        //         type.LlvmPrimitiveType.I64,
+        //         tmpReg2,
+        //         type.LlvmPrimitiveType.F64
+        //     );
+        //     out.push(castLeft, castRight, operation, castOut);
+        // }
         else {
             throw new Error(`Unsupported binary operation ${op}`);
         }
@@ -121,7 +121,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         );
         const instruction = new ins.PhiInstruction(
             this.namesMap.get(vertex)!,
-            type.LlvmPrimitiveType.F64,
+            irTypeToLlvmType(vertex.verifiedType!),
             operands as Array<[ins.Value, ins.Label]>
         );
         return [instruction];
@@ -148,8 +148,9 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
 
     visitReturnVertex(vertex: ir.ReturnVertex): Array<ins.Instruction> {
         //TODO: support void return
+        const retType = vertex.value ? irTypeToLlvmType(vertex.value.verifiedType!) : LlvmPrimitiveType.Void;
         const instruction = new ins.ReturnInstruction(
-            type.LlvmPrimitiveType.F64,
+            retType,
             this.namesMap.get(vertex.value!)!
         );
         return [instruction];
