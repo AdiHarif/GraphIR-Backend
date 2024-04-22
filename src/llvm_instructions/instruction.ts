@@ -92,7 +92,7 @@ export class CallInstruction implements Instruction {
 export class ReturnInstruction implements Instruction {
     constructor(
         public readonly type: LlvmType,
-        public readonly value: Value
+        public readonly value?: Value
     ) {}
 
     accept<T>(visitor: InstructionVisitor<T>): T {

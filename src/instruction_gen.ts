@@ -147,12 +147,16 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     }
 
     visitReturnVertex(vertex: ir.ReturnVertex): Array<ins.Instruction> {
-        //TODO: support void return
-        const retType = vertex.value ? irTypeToLlvmType(vertex.value.verifiedType!) : LlvmPrimitiveType.Void;
-        const instruction = new ins.ReturnInstruction(
-            retType,
-            this.namesMap.get(vertex.value!)!
-        );
+        let instruction;
+        if (vertex.value) {
+            instruction = new ins.ReturnInstruction(
+                irTypeToLlvmType(vertex.value.verifiedType!),
+                this.namesMap.get(vertex.value)!
+            );
+        }
+        else {
+            instruction = new ins.ReturnInstruction(LlvmPrimitiveType.Void);
+        }
         return [instruction];
     }
 

@@ -50,7 +50,11 @@ class InstructionStringVisitor implements InstructionVisitor<string> {
     }
 
     visitReturnInstruction(instruction: ins.ReturnInstruction): string {
-        return `ret ${instruction.type} ${valueToString(instruction.value, instruction.type!)}`;
+        let out = `ret ${instruction.type}`;
+        if (instruction.value) {
+            out += ` ${valueToString(instruction.value!, instruction.type)}`;
+        }
+        return out;
     }
 
     visitJumpInstruction(instruction: ins.JumpInstruction): string {
