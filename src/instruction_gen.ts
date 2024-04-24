@@ -2,7 +2,7 @@
 import * as ir from "graphir";
 
 import * as ins from "./llvm_instructions/instruction.js";
-import { irTypeToLlvmType, LlvmPrimitiveType } from "./llvm_instructions/type.js";
+import { irTypeToLlvmType, LlvmNumericType, LlvmVoidType } from "./llvm_instructions/type.js";
 
 const numericOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
     ['+', ins.LlvmNumericOperation.Add],
@@ -28,7 +28,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     visitLiteralVertex(vertex: ir.LiteralVertex): Array<ins.Instruction> {
         const instruction = new ins.BinaryOperationInstruction(
             this.namesMap.get(vertex)!,
-            irTypeToLlvmType(vertex.verifiedType!),
+            irTypeToLlvmType(vertex.verifiedType!) as LlvmNumericType,
             ins.LlvmNumericOperation.Add,
             0,
             (vertex.value as number)!
@@ -58,7 +58,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         if (numericOperatorsMap.has(op)) {
             out.push(new ins.BinaryOperationInstruction(
                 this.namesMap.get(vertex)!,
-                irTypeToLlvmType(vertex.verifiedType!),
+                irTypeToLlvmType(vertex.verifiedType!) as LlvmNumericType,
                 numericOperatorsMap.get(op)!,
                 this.namesMap.get(vertex.left!)!,
                 this.namesMap.get(vertex.right!)!
@@ -68,6 +68,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             out.push(new ins.ComparisonInstruction(
                 this.namesMap.get(vertex)!,
                 comparisonOperatorsMap.get(op)!,
+                irTypeToLlvmType(vertex.left!.verifiedType!) as LlvmNumericType,
                 this.namesMap.get(vertex.left!)!,
                 this.namesMap.get(vertex.right!)!
             ));
@@ -155,7 +156,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             );
         }
         else {
-            instruction = new ins.ReturnInstruction(LlvmPrimitiveType.Void);
+            instruction = new ins.ReturnInstruction(new LlvmVoidType());
         }
         return [instruction];
     }

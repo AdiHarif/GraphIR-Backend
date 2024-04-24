@@ -1,40 +1,24 @@
 
 import * as ins from "./instruction.js";
-import { LlvmType, LlvmPrimitiveType } from "./type.js";
+import { LlvmType, LlvmNumericType } from "./type.js";
 import { InstructionVisitor } from "./instruction_visitor.js";
 
 function valueToString(value: ins.Value, type: LlvmType): string {
     if (typeof value === "string") {
         return value;
     }
-    let out;
-    switch (type) {
-        case LlvmPrimitiveType.I1:
-            out = value ? "1" : "0";
-            break;
-        case LlvmPrimitiveType.I32:
-        case LlvmPrimitiveType.I64:
-            out = `${Math.floor(value as number)}`;
-            break;
-        case LlvmPrimitiveType.F32:
-        case LlvmPrimitiveType.F64:
-            out = `${value}`;
-            if (Number.isInteger(value)) {
-                out += ".0";
-            }
-            break;
-        case LlvmPrimitiveType.Void:
-            out = "void";
-            break;
-        default:
-            throw new Error(`Unknown type: ${type}`);
+    else if (type instanceof LlvmNumericType) {
+        return type.getLiteralAsString(value);
     }
-    return out;
+    else {
+        throw new Error(`Unsupported type (${type.name}) and value (${value}) combination.`);
+    }
 }
 
 class InstructionStringVisitor implements InstructionVisitor<string> {
     visitBinaryOperationInstruction(instruction: ins.BinaryOperationInstruction): string {
-        return `${instruction.result} = ${instruction.operation} ${instruction.resultType} ${valueToString(instruction.left, instruction.resultType)}, ${valueToString(instruction.right, instruction.resultType)}`;
+        const operation = instruction.resultType.getBinaryOperationInstructionString(instruction.operation);
+        return `${instruction.result} = ${operation} ${instruction.resultType.name} ${valueToString(instruction.left, instruction.resultType)}, ${valueToString(instruction.right, instruction.resultType)}`;
     }
 
     visitLabelInstruction(instruction: ins.LabelInstruction): string {
@@ -42,15 +26,15 @@ class InstructionStringVisitor implements InstructionVisitor<string> {
     }
 
     visitVoidCallInstruction(instruction: ins.VoidCallInstruction): string {
-        return `call void @${instruction.name}(${instruction.args.map(a => `${a.type} ${valueToString(a.value, a.type!)}`).join(", ")})`;
+        return `call void @${instruction.name}(${instruction.args.map(a => `${a.type!.name} ${valueToString(a.value, a.type!)}`).join(", ")})`;
     }
 
     visitCallInstruction(instruction: ins.CallInstruction): string {
-        return `${instruction.result} = call ${instruction.resultType} @${instruction.name}(${instruction.args.map(a => `${a.type} ${valueToString(a.value, a.type!)}`).join(", ")})`;
+        return `${instruction.result} = call ${instruction.resultType.name} @${instruction.name}(${instruction.args.map(a => `${a.type!.name} ${valueToString(a.value, a.type!)}`).join(", ")})`;
     }
 
     visitReturnInstruction(instruction: ins.ReturnInstruction): string {
-        let out = `ret ${instruction.type}`;
+        let out = `ret ${instruction.type.name}`;
         if (instruction.value) {
             out += ` ${valueToString(instruction.value!, instruction.type)}`;
         }
@@ -66,21 +50,23 @@ class InstructionStringVisitor implements InstructionVisitor<string> {
     }
 
     visitPhiInstruction(instruction: ins.PhiInstruction): string {
-        return `${instruction.result} = phi ${instruction.resultType} ${instruction.operands.map(v => `[${v[0]}, %${v[1]}]`).join(", ")}`;
+        return `${instruction.result} = phi ${instruction.resultType.name} ${instruction.operands.map(v => `[${v[0]}, %${v[1]}]`).join(", ")}`;
     }
 
     visitComparisonInstruction(instruction: ins.ComparisonInstruction): string {
-        return `${instruction.result} = fcmp ${instruction.condition} ${LlvmPrimitiveType.F64} ${instruction.left}, ${instruction.right}`;
+        const comparisonInstruction = instruction.argsType.getComparisonInstructionString();
+        const comparisonCondition = instruction.argsType.getComparisonConditionString(instruction.condition);
+        return `${instruction.result} = ${comparisonInstruction} ${comparisonCondition} ${instruction.argsType.name} ${instruction.left}, ${instruction.right}`;
     }
 
     visitCastInstruction(instruction: ins.CastInstruction): string {
-        return `${instruction.result} = ${instruction.operation} ${instruction.srcType} ${valueToString(instruction.value, instruction.srcType)} to ${instruction.dstType}`;
+        return `${instruction.result} = ${instruction.operation} ${instruction.srcType.name} ${valueToString(instruction.value, instruction.srcType)} to ${instruction.dstType.name}`;
     }
 
     visitFunction(instruction: ins.Function): string {
-        let out = `define ${instruction.functionType.result} @${instruction.name}`;
+        let out = `define ${instruction.functionType.result.name} @${instruction.name}`;
         if (instruction.functionType.parameters.length > 0) {
-            out += `(${instruction.functionType.parameters.join(", ")})`;
+            out += `(${instruction.functionType.parameters.map(t => t.name).join(", ")})`;
         } else {
             out += "()";
         }

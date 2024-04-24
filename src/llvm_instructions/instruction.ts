@@ -1,6 +1,6 @@
 
 import {InstructionVisitor} from './instruction_visitor.js'
-import { LlvmType, LlvmPrimitiveType, LlvmFunctionType } from './type.js'
+import { LlvmType, LlvmFunctionType, LlvmNumericType, LlvmVoidType } from './type.js'
 
 
 export type Register = string;
@@ -10,19 +10,19 @@ export type NamedValue = Register | Parameter | Label;
 export type Value = Register | Parameter | number;
 
 export enum LlvmNumericOperation {
-    Add = 'fadd',
-    Sub = 'fsub',
-    Mul = 'fmul',
-    Div = 'fdiv',
-    LShift = 'shl',
-    LRShift = 'lshr',
-    ARShift = 'ashr',
+    Add,
+    Sub,
+    Mul,
+    Div,
+    LShift,
+    LRShift,
+    ARShift,
 }
 
 export enum LlvmCondition {
-    Eq = 'oeq',
-    Ne = 'one',
-    Lt = 'olt',
+    Eq,
+    Ne,
+    Lt,
 }
 
 export enum LlvmCastOperation {
@@ -42,7 +42,7 @@ export interface Instruction {
 export class BinaryOperationInstruction implements Instruction {
     constructor(
         public readonly result: Register,
-        public readonly resultType: LlvmType,
+        public readonly resultType: LlvmNumericType,
         public readonly operation: LlvmNumericOperation,
         public readonly left: Value,
         public readonly right: Value
@@ -64,7 +64,7 @@ export class LabelInstruction implements Instruction {
 }
 
 export class VoidCallInstruction implements Instruction {
-    static readonly type = LlvmPrimitiveType.Void;
+    static readonly type = new LlvmVoidType();
 
     constructor(
         public name: string,
@@ -138,6 +138,7 @@ export class ComparisonInstruction implements Instruction {
     constructor(
         public readonly result: Register,
         public readonly condition: LlvmCondition,
+        public readonly argsType: LlvmNumericType,
         public readonly left: Value,
         public readonly right: Value
     ) {}

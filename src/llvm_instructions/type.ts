@@ -1,42 +1,128 @@
 
 import * as ir from 'graphir';
 
-export enum LlvmPrimitiveType {
-    Void = 'void',
-    F32 = 'float',
-    F64 = 'double',
-    I1 = 'i1',
-    I32 = 'i32',
-    I64 = 'i64'
+import * as ins from './instruction.js';
+
+export abstract class LlvmType {
+    abstract get name(): string;
 }
 
-export type LlvmFunctionType = {
-    result: LlvmPrimitiveType;
-    parameters: Array<LlvmPrimitiveType>;
-};
+export abstract class LlvmNumericType extends LlvmType {
+    abstract getComparisonInstructionString(): string;
+    abstract getComparisonConditionString(condition: ins.LlvmCondition): string;
+    abstract getBinaryOperationInstructionString(operation: ins.LlvmNumericOperation): string;
+    abstract getLiteralAsString(value: number): string;
+}
 
-export type LlvmType = LlvmPrimitiveType | LlvmFunctionType;
+export class LlvmIntegerType extends LlvmNumericType {
+    constructor(public readonly width: number) {
+        super();
+    }
+
+    get name(): string {
+        return `i${this.width}`;
+    }
+
+    getComparisonInstructionString(): string {
+        return `icmp`;
+    }
+
+    getComparisonConditionString(condition: ins.LlvmCondition): string {
+        switch (condition) {
+            case ins.LlvmCondition.Eq: return `eq`;
+            case ins.LlvmCondition.Ne: return `ne`;
+            case ins.LlvmCondition.Lt: return `slt`;
+        }
+    }
+
+    getBinaryOperationInstructionString(operation: ins.LlvmNumericOperation): string {
+        switch (operation) {
+            case ins.LlvmNumericOperation.Add: return `add`;
+            case ins.LlvmNumericOperation.Sub: return `sub`;
+            case ins.LlvmNumericOperation.Mul: return `mul`;
+            case ins.LlvmNumericOperation.Div: return `sdiv`;
+            case ins.LlvmNumericOperation.LShift: return `shl`;
+            case ins.LlvmNumericOperation.LRShift: return `lshr`;
+            case ins.LlvmNumericOperation.ARShift: return `ashr`;
+        }
+    }
+
+    getLiteralAsString(value: number): string {
+        if (this.width === 1) {
+            return value ? "1" : "0";
+        }
+        return `${Math.floor(value)}`;
+    }
+}
+
+export class LlvmFloatType extends LlvmNumericType {
+    constructor(public readonly width: 32 | 64) {
+        super();
+    }
+
+    get name(): string {
+        return this.width === 32 ? `float` : `double`;
+    }
+
+    getComparisonInstructionString(): string {
+        return `fcmp`;
+    }
+
+    getComparisonConditionString(condition: ins.LlvmCondition): string {
+        switch (condition) {
+            case ins.LlvmCondition.Eq: return `oeq`;
+            case ins.LlvmCondition.Ne: return `one`;
+            case ins.LlvmCondition.Lt: return `olt`;
+        }
+    }
+
+    getBinaryOperationInstructionString(operation: ins.LlvmNumericOperation): string {
+        switch (operation) {
+            case ins.LlvmNumericOperation.Add: return `fadd`;
+            case ins.LlvmNumericOperation.Sub: return `fsub`;
+            case ins.LlvmNumericOperation.Mul: return `fmul`;
+            case ins.LlvmNumericOperation.Div: return `fdiv`;
+            default: throw new Error(`Unsupported operation for float type: ${operation}`);
+        }
+    }
+
+    getLiteralAsString(value: number): string {
+        let out = `${value}`;
+        if (Number.isInteger(value)) {
+            out += ".0";
+        }
+        return out;
+    }
+}
+
+export class LlvmVoidType extends LlvmType {
+    get name(): string {
+        return 'void';
+    }
+}
+
+export class LlvmFunctionType extends LlvmType {
+    constructor(public readonly result: LlvmType, public readonly parameters: Array<LlvmType>) {
+        super();
+    }
+
+    get name(): string {
+        return `${this.result.name} (${this.parameters.map(p => p.name).join(', ')})`;
+    }
+};
 
 
 class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
     visitNumberType(type: ir.NumberType): LlvmType {
-        return LlvmPrimitiveType.F64;
+        return new LlvmIntegerType(64);
     }
 
     visitIntegerType(type: ir.IntegerType): LlvmType {
-        switch (type.width) {
-            case 1: return LlvmPrimitiveType.I1;
-            case 32: return LlvmPrimitiveType.I32;
-            case 64: return LlvmPrimitiveType.I64;
-            default: throw new Error(`Unsupported integer width: ${type.width}`);
-        }
+        return new LlvmIntegerType(type.width);
     }
 
     visitFloatType(type: ir.FloatType): LlvmType {
-        switch (type.width) {
-            case 32: return LlvmPrimitiveType.F32;
-            case 64: return LlvmPrimitiveType.F64;
-        }
+        return new LlvmFloatType(type.width);
     }
 
     visitOptionType(type: ir.OptionType): LlvmType {
@@ -44,9 +130,9 @@ class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
     }
 
     visitFunctionType(type: ir.FunctionType): LlvmType {
-        const result = type.returnType.accept(this) as LlvmPrimitiveType;
-        const parameters = type.parameterTypes.map(t => t.accept(this) as LlvmPrimitiveType);
-        return { result, parameters };
+        const result = type.returnType.accept(this);
+        const parameters = type.parameterTypes.map(t => t.accept(this));
+        return new LlvmFunctionType(result, parameters);
     }
 }
 
