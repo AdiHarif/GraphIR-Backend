@@ -4,22 +4,22 @@ import * as ir from "graphir";
 import * as ins from "./llvm_instructions/instruction.js";
 import { irTypeToLlvmType, LlvmPrimitiveType } from "./llvm_instructions/type.js";
 
-const numericOperatorsMap = new Map<ir.BinaryOperation, ins.LlvmNumericOperation>([
-    [ir.BinaryOperation.Add, ins.LlvmNumericOperation.Add],
-    [ir.BinaryOperation.Sub, ins.LlvmNumericOperation.Sub],
-    [ir.BinaryOperation.Mul, ins.LlvmNumericOperation.Mul],
-    [ir.BinaryOperation.Div, ins.LlvmNumericOperation.Div],
+const numericOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
+    ['+', ins.LlvmNumericOperation.Add],
+    ['-', ins.LlvmNumericOperation.Sub],
+    ['*', ins.LlvmNumericOperation.Mul],
+    ['/', ins.LlvmNumericOperation.Div],
 ]);
 
-const bitwiseOperatorsMap = new Map<ir.BinaryOperation, ins.LlvmNumericOperation>([
-    [ir.BinaryOperation.ArithmeticRightShift, ins.LlvmNumericOperation.ARShift],
-    [ir.BinaryOperation.LogicalRightShift, ins.LlvmNumericOperation.LRShift]
+const bitwiseOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
+    ['>>', ins.LlvmNumericOperation.ARShift],
+    ['>>>', ins.LlvmNumericOperation.LRShift]
 ]);
 
-const comparisonOperatorsMap = new Map<ir.BinaryOperation, ins.LlvmCondition>([
-    [ir.BinaryOperation.EqualEqual, ins.LlvmCondition.Eq],
-    [ir.BinaryOperation.NotEqual, ins.LlvmCondition.Ne],
-    [ir.BinaryOperation.LessThan, ins.LlvmCondition.Lt],
+const comparisonOperatorsMap = new Map<ir.Operator, ins.LlvmCondition>([
+    ['==', ins.LlvmCondition.Eq],
+    ['!=', ins.LlvmCondition.Ne],
+    ['<', ins.LlvmCondition.Lt],
 ]);
 
 export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruction>> {
@@ -53,7 +53,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     }
 
     visitBinaryOperationVertex(vertex: ir.BinaryOperationVertex): Array<ins.Instruction> {
-        const op = vertex.operator as ir.BinaryOperation;
+        const op = vertex.operator;
         const out = [];
         if (numericOperatorsMap.has(op)) {
             out.push(new ins.BinaryOperationInstruction(
