@@ -135,6 +135,27 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                     this.verticesStack.push(call.callerObject);
                 }
                 break;
+            case ir.VertexKind.Allocation:
+                const allocation = this.verticesStack.pop() as ir.AllocationVertex;
+                this.verticesStack.push(allocation.next!);
+                this.verticesStack.push(allocation);
+                //TODO: add handling of allocation with constructor arguments
+                break;
+            case ir.VertexKind.Load:
+                const load = this.verticesStack.pop() as ir.LoadVertex;
+                this.verticesStack.push(load.next!);
+                this.verticesStack.push(load);
+                this.verticesStack.push(load.property!);
+                this.verticesStack.push(load.object!);
+                break;
+            case ir.VertexKind.Store:
+                const store = this.verticesStack.pop() as ir.StoreVertex;
+                this.verticesStack.push(store.next!);
+                this.verticesStack.push(store);
+                this.verticesStack.push(store.value!);
+                this.verticesStack.push(store.property!);
+                this.verticesStack.push(store.object!);
+                break;
             default:
                 throw new Error(`Unexpected vertex kind: ${vertex.kind}`);
         }

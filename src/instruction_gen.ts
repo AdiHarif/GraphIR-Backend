@@ -2,7 +2,7 @@
 import * as ir from "graphir";
 
 import * as ins from "./llvm_instructions/instruction.js";
-import { irTypeToLlvmType, LlvmNumericType, LlvmVoidType } from "./llvm_instructions/type.js";
+import { irTypeToLlvmType, LlvmArrayType, LlvmNumericType, LlvmVoidType } from "./llvm_instructions/type.js";
 
 const numericOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
     ['+', ins.LlvmNumericOperation.Add],
@@ -176,15 +176,59 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     }
 
     visitAllocationVertex(vertex: ir.AllocationVertex): Array<ins.Instruction> {
-        throw new Error("Method not implemented.");
+        const objectType = vertex.verifiedType!;
+        if (!(objectType instanceof ir.StaticArrayType)) {
+            throw new Error(`Unsupported object type`);
+        }
+        const arrayType = new LlvmArrayType(irTypeToLlvmType(objectType.elementType), objectType.length);
+        const instruction = new ins.AllocaInstruction(
+            this.namesMap.get(vertex)!,
+            arrayType
+        );
+        return [instruction];
     }
 
     visitStoreVertex(vertex: ir.StoreVertex): Array<ins.Instruction> {
-        throw new Error("Method not implemented.");
+        const objectType = vertex.object!.verifiedType!;
+        if (!(objectType instanceof ir.StaticArrayType)) {
+            throw new Error(`Unsupported object type`);
+        }
+        const tmpReg = `%r${vertex.id}.0`;
+        const baseType = objectType.elementType;
+        const gepInstruction = new ins.GetElementPtrInstruction(
+            tmpReg,
+            irTypeToLlvmType(baseType),
+            this.namesMap.get(vertex.object!)!,
+            [this.namesMap.get(vertex.property!)!]
+        );
+        const storeInstruction = new ins.StoreInstruction(
+            irTypeToLlvmType(vertex.value!.verifiedType!),
+            tmpReg,
+            this.namesMap.get(vertex.value!)!
+        );
+        return [gepInstruction, storeInstruction];
     }
 
     visitLoadVertex(vertex: ir.LoadVertex): Array<ins.Instruction> {
-        throw new Error("Method not implemented.");
+        const objectType = vertex.object!.verifiedType!;
+        if (!(objectType instanceof ir.StaticArrayType)) {
+            throw new Error(`Unsupported object type`);
+        }
+        const tmpReg = `%r${vertex.id}.0`;
+        const baseType = objectType.elementType;
+        const gepInstruction = new ins.GetElementPtrInstruction(
+            tmpReg,
+            irTypeToLlvmType(baseType),
+            this.namesMap.get(vertex.object!)!,
+            [this.namesMap.get(vertex.property!)!]
+        );
+        const loadInstruction = new ins.LoadInstruction(
+            this.namesMap.get(vertex)!,
+            irTypeToLlvmType(vertex.verifiedType!),
+            tmpReg
+        );
+        return [gepInstruction, loadInstruction];
+
     }
 
     visitCallVertex(vertex: ir.CallVertex): Array<ins.Instruction> {
