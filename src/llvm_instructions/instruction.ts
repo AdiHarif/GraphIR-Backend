@@ -173,3 +173,51 @@ export class Function implements Instruction {
         return visitor.visitFunction(this);
     }
 }
+
+export class GetElementPtrInstruction implements Instruction {
+    constructor(
+        public readonly result: Register,
+        public readonly baseType: LlvmType,
+        public readonly pointer: Value,
+        public readonly indexList: Array<Value>
+    ) {}
+
+    accept<T>(visitor: InstructionVisitor<T>): T {
+        return visitor.visitGetElementPtrInstruction(this);
+    }
+}
+
+export class AllocaInstruction implements Instruction {
+    constructor(
+        public readonly result: Register,
+        public readonly baseType: LlvmType
+    ) {}
+
+    accept<T>(visitor: InstructionVisitor<T>): T {
+        return visitor.visitAllocaInstruction(this);
+    }
+}
+
+export class LoadInstruction implements Instruction {
+    constructor(
+        public readonly result: Register,
+        public readonly baseType: LlvmType,
+        public readonly pointer: Value
+    ) {}
+
+    accept<T>(visitor: InstructionVisitor<T>): T {
+        return visitor.visitLoadInstruction(this);
+    }
+}
+
+export class StoreInstruction implements Instruction {
+    constructor(
+        public readonly baseType: LlvmType,
+        public readonly pointer: Value,
+        public readonly value: Value
+    ) {}
+
+    accept<T>(visitor: InstructionVisitor<T>): T {
+        return visitor.visitStoreInstruction(this);
+    }
+}

@@ -13,4 +13,8 @@ export interface InstructionVisitor<T> {
     visitComparisonInstruction(instruction: ins.ComparisonInstruction): T;
     visitCastInstruction(instruction: ins.CastInstruction): T;
     visitFunction(instruction: ins.Function): T;
+    visitGetElementPtrInstruction(instruction: ins.GetElementPtrInstruction): T;
+    visitAllocaInstruction(instruction: ins.AllocaInstruction): T;
+    visitLoadInstruction(instruction: ins.LoadInstruction): T;
+    visitStoreInstruction(instruction: ins.StoreInstruction): T;
 }

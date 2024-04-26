@@ -80,6 +80,24 @@ class InstructionStringVisitor implements InstructionVisitor<string> {
         out += "}"
         return out;
     }
+
+    visitGetElementPtrInstruction(instruction: ins.GetElementPtrInstruction): string {
+        let out = `${instruction.result} = getelementptr ${instruction.baseType.name}, ptr ${instruction.pointer}, `;
+        out += instruction.indexList.map(i => `i32 ${i}`).join(", ");
+        return out;
+    }
+
+    visitAllocaInstruction(instruction: ins.AllocaInstruction): string {
+        return `${instruction.result} = alloca ${instruction.baseType.name}`;
+    }
+
+    visitLoadInstruction(instruction: ins.LoadInstruction): string {
+        return `${instruction.result} = load ${instruction.baseType.name}, ptr ${instruction.pointer}`;
+    }
+
+    visitStoreInstruction(instruction: ins.StoreInstruction): string {
+        return `store ${instruction.baseType.name} ${instruction.value}, ptr ${instruction.pointer}`;
+    }
 }
 
 const instructionStringVisitor = new InstructionStringVisitor();
