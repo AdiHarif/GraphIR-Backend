@@ -2,6 +2,7 @@
 import * as ir from 'graphir';
 
 import * as ins from './instruction.js';
+import { DynamicArrayType, StaticArrayType } from 'ts-graph-extractor/submodules/graphir/dist/dts/type/array_type.js';
 
 export abstract class LlvmType {
     abstract get name(): string;
@@ -101,6 +102,26 @@ export class LlvmVoidType extends LlvmType {
     }
 }
 
+export class LlvmPointerType extends LlvmType {
+    constructor(public readonly baseType: LlvmType) {
+        super();
+    }
+
+    get name(): string {
+        return `${this.baseType.name}*`;
+    }
+}
+
+export class LlvmArrayType extends LlvmType {
+    constructor(public readonly elementType: LlvmType, public readonly size: number) {
+        super();
+    }
+
+    get name(): string {
+        return `[${this.size} x ${this.elementType.name}]`;
+    }
+}
+
 export class LlvmFunctionType extends LlvmType {
     constructor(public readonly result: LlvmType, public readonly parameters: Array<LlvmType>) {
         super();
@@ -113,6 +134,10 @@ export class LlvmFunctionType extends LlvmType {
 
 
 class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
+    visitUnknownType(type: ir.UnknownType): LlvmType {
+        throw new Error('Unknown types are not yet supported.');
+    }
+
     visitNumberType(type: ir.NumberType): LlvmType {
         return new LlvmIntegerType(64);
     }
@@ -133,6 +158,14 @@ class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
         const result = type.returnType.accept(this);
         const parameters = type.parameterTypes.map(t => t.accept(this));
         return new LlvmFunctionType(result, parameters);
+    }
+
+    visitStaticArrayType(type: StaticArrayType): LlvmType {
+        return new LlvmArrayType(type.elementType.accept(this), type.length);
+    }
+
+    visitDynamicArrayType(type: DynamicArrayType): LlvmType {
+        throw new Error('Dynamic array types are not yet supported.');
     }
 }
 
