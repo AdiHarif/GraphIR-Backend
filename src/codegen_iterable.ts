@@ -128,8 +128,9 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 }
                 break;
             case ir.VertexKind.Call:
-                const call = vertex as ir.CallVertex;
+                const call = this.verticesStack.pop() as ir.CallVertex;
                 this.verticesStack.push(call.next!);
+                this.verticesStack.push(call);
                 this.verticesStack.push(...call.args!);
                 if (call.callerObject) {
                     this.verticesStack.push(call.callerObject);
