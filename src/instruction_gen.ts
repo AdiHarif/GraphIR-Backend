@@ -232,6 +232,18 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     }
 
     visitCallVertex(vertex: ir.CallVertex): Array<ins.Instruction> {
-        throw new Error("Method not implemented.");
+        if (vertex.callerObject) {
+            throw new Error(`caller objects are not yet supported`);
+        }
+        if (!(vertex.callee instanceof ir.SymbolVertex)) {
+            throw new Error(`Only calls to static functions are supported`);
+        }
+        const functionName = (vertex.callee as ir.SymbolVertex).name;
+        return [new ins.CallInstruction(
+            this.namesMap.get(vertex)!,
+            irTypeToLlvmType((vertex.verifiedType!)),
+            functionName,
+            vertex.args!.map(arg => { return { value: this.namesMap.get(arg)!, type: irTypeToLlvmType(arg.verifiedType!) }})
+        )];
     }
 }
