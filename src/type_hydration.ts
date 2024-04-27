@@ -32,7 +32,7 @@ function typeNameToType(typeName: string): ir.Type {
         const arrowIndex = typeName.indexOf('->');
         const returnTypeName = typeName.slice(arrowIndex + 2);
         const returnType = typeNameToType(returnTypeName);
-        const argTypeNames = typeName.slice(1, arrowIndex - 1).split('*');
+        const argTypeNames = typeName.slice(1, arrowIndex - 1).split(',');
         const argTypes = argTypeNames.map(typeNameToType);
         return new ir.FunctionType(returnType, argTypes);
     }
@@ -71,7 +71,7 @@ export function hydrateTypesFromFiles(graph: ir.Graph, verticesPath: string) {
     const verticesTypes = new Map<number, ir.Type>();
     const lines = fs.readFileSync(verticesPath).toString().split('\n');
     for (const line of lines) {
-        const [vertexId, typeName] = line.split(',');
+        const [vertexId, typeName] = line.split('\t');
         verticesTypes.set(parseInt(vertexId), typeNameToType(typeName));
     }
 
