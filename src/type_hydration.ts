@@ -36,6 +36,11 @@ function typeNameToType(typeName: string): ir.Type {
         const argTypes = argTypeNames.map(typeNameToType);
         return new ir.FunctionType(returnType, argTypes);
     }
+    else if (typeName.startsWith('StaticArray')) {
+        const innerTypeNameWithLength = extractInnerTypeName(typeName);
+        const [innerTypeName, lengthString]  = innerTypeNameWithLength.split(',');
+        return new ir.StaticArrayType(typeNameToType(innerTypeName), parseInt(lengthString));
+    }
     throw new Error(`Unsupported typename: ${typeName}`);
 }
 
