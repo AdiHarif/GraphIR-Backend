@@ -185,7 +185,25 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             this.namesMap.get(vertex)!,
             arrayType
         );
-        return [instruction];
+        const out: Array<ins.Instruction> = [instruction];
+
+        vertex.args!.forEach((arg, index) => {
+            const tmpReg = `%r${vertex.id}.${arg.id}`;
+            const gepInstruction = new ins.GetElementPtrInstruction(
+                tmpReg,
+                irTypeToLlvmType(objectType.elementType),
+                this.namesMap.get(vertex)!,
+                [index]
+            );
+            const storeInstruction = new ins.StoreInstruction(
+                irTypeToLlvmType(arg.verifiedType!),
+                tmpReg,
+                this.namesMap.get(arg)!
+            );
+            out.push(gepInstruction);
+            out.push(storeInstruction);
+        });
+        return out;
     }
 
     visitStoreVertex(vertex: ir.StoreVertex): Array<ins.Instruction> {
