@@ -11,7 +11,7 @@ import { CodeGenIterable } from './codegen_iterable.js';
 import { allocateNames } from './names_allocator.js';
 import { InstructionGenVisitor } from './instruction_gen.js';
 import { instructionToString } from './llvm_instructions/string_instruction.js';
-import { LlvmFunctionType, irTypeToLlvmType } from './llvm_instructions/type.js';
+import { LlvmFunctionType, irTypeToLlvmType } from './llvm_instructions/type/type.js';
 import { hydrateTypesFromFiles } from './type_hydration.js';
 
 function parseCliArgs() {

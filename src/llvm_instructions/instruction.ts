@@ -1,6 +1,6 @@
 
 import {InstructionVisitor} from './instruction_visitor.js'
-import { LlvmType, LlvmFunctionType, LlvmNumericType, LlvmVoidType } from './type.js'
+import { LlvmType, LlvmFunctionType, LlvmNumericType, LlvmVoidType } from './type/type.js'
 
 
 export type Register = string;

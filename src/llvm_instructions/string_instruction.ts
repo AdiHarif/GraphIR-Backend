@@ -1,6 +1,6 @@
 
 import * as ins from "./instruction.js";
-import { LlvmType, LlvmNumericType } from "./type.js";
+import { LlvmType, LlvmNumericType } from "./type/type.js";
 import { InstructionVisitor } from "./instruction_visitor.js";
 
 function valueToString(value: ins.Value, type: LlvmType): string {

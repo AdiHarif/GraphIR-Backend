@@ -1,7 +1,7 @@
 
 import * as ir from 'graphir';
 
-import * as ins from './instruction.js';
+import * as ins from '../instruction.js';
 import { DynamicArrayType, StaticArrayType } from 'ts-graph-extractor/submodules/graphir/dist/dts/type/array_type.js';
 
 export abstract class LlvmType {
@@ -103,12 +103,8 @@ export class LlvmVoidType extends LlvmType {
 }
 
 export class LlvmPointerType extends LlvmType {
-    constructor(public readonly baseType: LlvmType) {
-        super();
-    }
-
     get name(): string {
-        return `${this.baseType.name}*`;
+        return 'ptr';
     }
 }
 
