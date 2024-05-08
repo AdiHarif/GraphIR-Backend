@@ -1,8 +1,11 @@
 
+import assert from "assert";
+
 import * as ir from "graphir";
 
 import * as ins from "./llvm_instructions/instruction.js";
-import { irTypeToLlvmType, LlvmArrayType, LlvmNumericType, LlvmVoidType } from "./llvm_instructions/type.js";
+import { irTypeToLlvmType, LlvmArrayType, LlvmNumericType, LlvmPointerType, LlvmType, LlvmVoidType } from "./llvm_instructions/type/type.js";
+import { getVectorType } from "./llvm_instructions/type/predefind_type.js";
 
 const numericOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
     ['+', ins.LlvmNumericOperation.Add],
@@ -177,75 +180,134 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
 
     visitAllocationVertex(vertex: ir.AllocationVertex): Array<ins.Instruction> {
         const objectType = vertex.verifiedType!;
-        if (!(objectType instanceof ir.StaticArrayType)) {
-            throw new Error(`Unsupported object type`);
+        let arrayType: LlvmType;
+        if (objectType instanceof ir.StaticArrayType) {
+            arrayType = new LlvmArrayType(irTypeToLlvmType(objectType.elementType), objectType.length);
         }
-        const arrayType = new LlvmArrayType(irTypeToLlvmType(objectType.elementType), objectType.length);
+        else {
+            assert(objectType instanceof ir.DynamicArrayType);
+            assert(objectType.elementType instanceof ir.IntegerType && objectType.elementType.width == 32);
+            arrayType = getVectorType();
+
+        }
         const instruction = new ins.AllocaInstruction(
             this.namesMap.get(vertex)!,
             arrayType
         );
         const out: Array<ins.Instruction> = [instruction];
 
-        vertex.args!.forEach((arg, index) => {
-            const tmpReg = `%r${vertex.id}.${arg.id}`;
-            const gepInstruction = new ins.GetElementPtrInstruction(
-                tmpReg,
-                irTypeToLlvmType(objectType.elementType),
-                this.namesMap.get(vertex)!,
-                [index]
+        if (objectType instanceof ir.DynamicArrayType) {
+            const initInstruction = new ins.VoidCallInstruction(
+                'create_vector',
+                [
+                    { value: this.namesMap.get(vertex)!, type: new LlvmPointerType() }
+                ]
             );
-            const storeInstruction = new ins.StoreInstruction(
-                irTypeToLlvmType(arg.verifiedType!),
-                tmpReg,
-                this.namesMap.get(arg)!
-            );
-            out.push(gepInstruction);
-            out.push(storeInstruction);
-        });
+            out.push(initInstruction);
+        }
+
+        if (objectType instanceof ir.StaticArrayType) {
+            vertex.args!.forEach((arg, index) => {
+                const tmpReg = `%r${vertex.id}.${arg.id}`;
+                const gepInstruction = new ins.GetElementPtrInstruction(
+                    tmpReg,
+                    irTypeToLlvmType(objectType.elementType),
+                    this.namesMap.get(vertex)!,
+                    [index]
+                );
+                const storeInstruction = new ins.StoreInstruction(
+                    irTypeToLlvmType(arg.verifiedType!),
+                    tmpReg,
+                    this.namesMap.get(arg)!
+                );
+                out.push(gepInstruction);
+                out.push(storeInstruction);
+            });
+        }
+        else {
+            vertex.args!.forEach(arg => {
+                const pushBackInstruction = new ins.VoidCallInstruction(
+                    'push_back',
+                    [
+                        { value: this.namesMap.get(vertex)!, type: new LlvmPointerType() },
+                        { value: this.namesMap.get(arg)!, type: irTypeToLlvmType(arg.verifiedType!)}
+                    ]
+                );
+                out.push(pushBackInstruction);
+            });
+        }
         return out;
     }
 
     visitStoreVertex(vertex: ir.StoreVertex): Array<ins.Instruction> {
         const objectType = vertex.object!.verifiedType!;
-        if (!(objectType instanceof ir.StaticArrayType)) {
+        if (objectType instanceof ir.StaticArrayType) {
+            const tmpReg = `%r${vertex.id}.0`;
+            const baseType = objectType.elementType;
+            const gepInstruction = new ins.GetElementPtrInstruction(
+                tmpReg,
+                irTypeToLlvmType(baseType),
+                this.namesMap.get(vertex.object!)!,
+                [this.namesMap.get(vertex.property!)!]
+            );
+            const storeInstruction = new ins.StoreInstruction(
+                irTypeToLlvmType(vertex.value!.verifiedType!),
+                tmpReg,
+                this.namesMap.get(vertex.value!)!
+            );
+            return [gepInstruction, storeInstruction];
+        }
+        else if (objectType instanceof ir.DynamicArrayType) {
+            assert(objectType.elementType instanceof ir.IntegerType && objectType.elementType.width == 32);
+            const setInstruction = new ins.VoidCallInstruction(
+                'set',
+                [
+                    { value: this.namesMap.get(vertex.object!)!, type: new LlvmPointerType() },
+                    { value: this.namesMap.get(vertex.property!)!, type: irTypeToLlvmType(vertex.property!.verifiedType!) },
+                    { value: this.namesMap.get(vertex.value!)!, type: irTypeToLlvmType(vertex.value!.verifiedType!) }
+                ]
+            );
+            return [setInstruction];
+        }
+        else {
             throw new Error(`Unsupported object type`);
         }
-        const tmpReg = `%r${vertex.id}.0`;
-        const baseType = objectType.elementType;
-        const gepInstruction = new ins.GetElementPtrInstruction(
-            tmpReg,
-            irTypeToLlvmType(baseType),
-            this.namesMap.get(vertex.object!)!,
-            [this.namesMap.get(vertex.property!)!]
-        );
-        const storeInstruction = new ins.StoreInstruction(
-            irTypeToLlvmType(vertex.value!.verifiedType!),
-            tmpReg,
-            this.namesMap.get(vertex.value!)!
-        );
-        return [gepInstruction, storeInstruction];
     }
 
     visitLoadVertex(vertex: ir.LoadVertex): Array<ins.Instruction> {
         const objectType = vertex.object!.verifiedType!;
-        if (!(objectType instanceof ir.StaticArrayType)) {
+        if (objectType instanceof ir.StaticArrayType) {
+            const tmpReg = `%r${vertex.id}.0`;
+            const baseType = objectType.elementType;
+            const gepInstruction = new ins.GetElementPtrInstruction(
+                tmpReg,
+                irTypeToLlvmType(baseType),
+                this.namesMap.get(vertex.object!)!,
+                [this.namesMap.get(vertex.property!)!]
+            );
+            const loadInstruction = new ins.LoadInstruction(
+                this.namesMap.get(vertex)!,
+                irTypeToLlvmType(vertex.verifiedType!),
+                tmpReg
+            );
+            return [gepInstruction, loadInstruction];
+        }
+        else if (objectType instanceof ir.DynamicArrayType) {
+            assert(objectType.elementType instanceof ir.IntegerType && objectType.elementType.width == 32);
+            const getInstruction = new ins.CallInstruction(
+                this.namesMap.get(vertex)!,
+                irTypeToLlvmType(vertex.verifiedType!),
+                'get',
+                [
+                    { value: this.namesMap.get(vertex.object!)!, type: new LlvmPointerType() },
+                    { value: this.namesMap.get(vertex.property!)!, type: irTypeToLlvmType(vertex.property!.verifiedType!) }
+                ]
+            );
+            return [getInstruction];
+        }
+        else {
             throw new Error(`Unsupported object type`);
         }
-        const tmpReg = `%r${vertex.id}.0`;
-        const baseType = objectType.elementType;
-        const gepInstruction = new ins.GetElementPtrInstruction(
-            tmpReg,
-            irTypeToLlvmType(baseType),
-            this.namesMap.get(vertex.object!)!,
-            [this.namesMap.get(vertex.property!)!]
-        );
-        const loadInstruction = new ins.LoadInstruction(
-            this.namesMap.get(vertex)!,
-            irTypeToLlvmType(vertex.verifiedType!),
-            tmpReg
-        );
-        return [gepInstruction, loadInstruction];
 
     }
 
