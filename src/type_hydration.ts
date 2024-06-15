@@ -80,6 +80,9 @@ export function hydrateTypesFromFiles(graph: ir.Graph, verticesPath: string) {
     const verticesTypes = new Map<number, ir.Type>();
     const lines = fs.readFileSync(verticesPath).toString().split('\n');
     for (const line of lines) {
+        if (line == '') {
+            continue;
+        }
         const [vertexId, typeName] = line.split('\t');
         verticesTypes.set(parseInt(vertexId), typeNameToType(typeName));
     }
