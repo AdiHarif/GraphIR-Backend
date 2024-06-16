@@ -5,7 +5,7 @@ import * as ir from "graphir";
 
 import * as ins from "./llvm_instructions/instruction.js";
 import { LlvmArrayType, LlvmNumericType, LlvmPointerType, LlvmType, LlvmVoidType } from "./llvm_instructions/type/type.js";
-import { irTypeToLlvmType } from "./llvm_instructions/type/type_conversion.js";
+import { irTypeToLlvmType, irTypeToMethodExtension } from "./llvm_instructions/type/type_conversion.js";
 import { getVectorType } from "./llvm_instructions/type/predefind_type.js";
 
 const numericOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
@@ -187,7 +187,6 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         }
         else {
             assert(objectType instanceof ir.DynamicArrayType);
-            assert(objectType.elementType instanceof ir.IntegerType && objectType.elementType.width == 32);
             arrayType = getVectorType();
 
         }
@@ -198,8 +197,9 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         const out: Array<ins.Instruction> = [instruction];
 
         if (objectType instanceof ir.DynamicArrayType) {
+            const methodExtension = irTypeToMethodExtension(objectType);
             const initInstruction = new ins.VoidCallInstruction(
-                'create_vector',
+                `create_vector_${methodExtension}`,
                 [
                     { value: this.namesMap.get(vertex)!, type: new LlvmPointerType() }
                 ]
@@ -259,9 +259,9 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             return [gepInstruction, storeInstruction];
         }
         else if (objectType instanceof ir.DynamicArrayType) {
-            assert(objectType.elementType instanceof ir.IntegerType && objectType.elementType.width == 32);
+            const methodExtension = irTypeToMethodExtension(objectType);
             const setInstruction = new ins.VoidCallInstruction(
-                'set',
+                `set_${methodExtension}`,
                 [
                     { value: this.namesMap.get(vertex.object!)!, type: new LlvmPointerType() },
                     { value: this.namesMap.get(vertex.property!)!, type: irTypeToLlvmType(vertex.property!.verifiedType!) },
@@ -294,11 +294,11 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             return [gepInstruction, loadInstruction];
         }
         else if (objectType instanceof ir.DynamicArrayType) {
-            assert(objectType.elementType instanceof ir.IntegerType && objectType.elementType.width == 32);
+            const methodExtension = irTypeToMethodExtension(objectType);
             const getInstruction = new ins.CallInstruction(
                 this.namesMap.get(vertex)!,
                 irTypeToLlvmType(vertex.verifiedType!),
-                'get',
+                `get_${methodExtension}`,
                 [
                     { value: this.namesMap.get(vertex.object!)!, type: new LlvmPointerType() },
                     { value: this.namesMap.get(vertex.property!)!, type: irTypeToLlvmType(vertex.property!.verifiedType!) }

@@ -52,3 +52,15 @@ const typeConversionVisitor = new TypeConversionVisitor();
 export function irTypeToLlvmType(irType: ir.Type): LlvmType {
     return irType.accept(typeConversionVisitor);
 }
+
+export function irTypeToMethodExtension(irType: ir.Type): string {
+    if (irType instanceof ir.IntegerType) {
+        return `i${irType.width}`;
+    }
+    else if (irType instanceof ir.DynamicArrayType) {
+        return `vec_${irTypeToMethodExtension(irType.elementType)}`;
+    }
+    else {
+        return irTypeToLlvmType(irType).name;
+    }
+}
