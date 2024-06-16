@@ -1,8 +1,6 @@
 
-import * as ir from 'graphir';
 
 import * as ins from '../instruction.js';
-import { DynamicArrayType, StaticArrayType } from 'ts-graph-extractor/submodules/graphir/dist/dts/type/array_type.js';
 
 export abstract class LlvmType {
     abstract get name(): string;
@@ -128,45 +126,3 @@ export class LlvmFunctionType extends LlvmType {
     }
 };
 
-
-class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
-    visitUnknownType(type: ir.UnknownType): LlvmType {
-        throw new Error('Unknown types are not yet supported.');
-    }
-
-    visitNumberType(type: ir.NumberType): LlvmType {
-        return new LlvmIntegerType(64);
-    }
-
-    visitIntegerType(type: ir.IntegerType): LlvmType {
-        return new LlvmIntegerType(type.width);
-    }
-
-    visitFloatType(type: ir.FloatType): LlvmType {
-        return new LlvmFloatType(type.width);
-    }
-
-    visitOptionType(type: ir.OptionType): LlvmType {
-        throw new Error('Option types are not yet supported.');
-    }
-
-    visitFunctionType(type: ir.FunctionType): LlvmType {
-        const result = type.returnType.accept(this);
-        const parameters = type.parameterTypes.map(t => t.accept(this));
-        return new LlvmFunctionType(result, parameters);
-    }
-
-    visitStaticArrayType(type: StaticArrayType): LlvmType {
-        return new LlvmArrayType(type.elementType.accept(this), type.length);
-    }
-
-    visitDynamicArrayType(type: DynamicArrayType): LlvmType {
-        throw new Error('Dynamic array types are not yet supported.');
-    }
-}
-
-const typeConversionVisitor = new TypeConversionVisitor();
-
-export function irTypeToLlvmType(irType: ir.Type): LlvmType {
-    return irType.accept(typeConversionVisitor);
-}

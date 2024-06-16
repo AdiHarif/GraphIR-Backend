@@ -4,7 +4,8 @@ import assert from "assert";
 import * as ir from "graphir";
 
 import * as ins from "./llvm_instructions/instruction.js";
-import { irTypeToLlvmType, LlvmArrayType, LlvmNumericType, LlvmPointerType, LlvmType, LlvmVoidType } from "./llvm_instructions/type/type.js";
+import { LlvmArrayType, LlvmNumericType, LlvmPointerType, LlvmType, LlvmVoidType } from "./llvm_instructions/type/type.js";
+import { irTypeToLlvmType } from "./llvm_instructions/type/type_conversion.js";
 import { getVectorType } from "./llvm_instructions/type/predefind_type.js";
 
 const numericOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
