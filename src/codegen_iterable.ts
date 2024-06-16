@@ -50,7 +50,9 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                     .forEach(vertex => set.add(vertex));
             }
         }
-
+        if (reachingMap.size == 0) {
+            return;
+        }
         const dominators = [...reachingMap.values()].reduce((prev, curr) => {
             return new Set([...prev].filter(x => curr.has(x)));
         });
