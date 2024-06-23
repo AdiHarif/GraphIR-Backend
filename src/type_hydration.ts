@@ -53,7 +53,7 @@ function hydrateFunctionType(graph: ir.Graph, verticesTypes: Map<number, ir.Type
     if (graph.getStartVertex().inEdges.length > 0) {
         assert(graph.getStartVertex().inEdges.length == 1);
         const symbolVertex = graph.getStartVertex().inEdges[0].source;
-        assert(symbolVertex instanceof ir.SymbolVertex);
+        assert(symbolVertex instanceof ir.StaticSymbolVertex);
         graph.verifiedType = symbolVertex.verifiedType! as ir.FunctionType;
     }
     else {

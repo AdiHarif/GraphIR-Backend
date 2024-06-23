@@ -31,7 +31,7 @@ function generateLlvmIr(graph: ir.Graph): void {
     }
     let function_name;
     if (graph.getStartVertex().inEdges.length > 0) {
-        function_name = (graph.getStartVertex().inEdges[0].source as ir.SymbolVertex).name;
+        function_name = (graph.getStartVertex().inEdges[0].source as ir.StaticSymbolVertex).name;
     }
     else {
         function_name = 'main';

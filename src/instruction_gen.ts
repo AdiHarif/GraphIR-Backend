@@ -40,7 +40,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         return [instruction];
     }
 
-    visitSymbolVertex(vertex: ir.SymbolVertex): Array<ins.Instruction> {
+    visitStaticSymbolVertex(vertex: ir.StaticSymbolVertex): Array<ins.Instruction> {
         return [];
     }
 
@@ -316,10 +316,10 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         if (vertex.callerObject) {
             throw new Error(`caller objects are not yet supported`);
         }
-        if (!(vertex.callee instanceof ir.SymbolVertex)) {
+        if (!(vertex.callee instanceof ir.StaticSymbolVertex)) {
             throw new Error(`Only calls to static functions are supported`);
         }
-        const functionName = (vertex.callee as ir.SymbolVertex).name;
+        const functionName = (vertex.callee as ir.StaticSymbolVertex).name;
         return [new ins.CallInstruction(
             this.namesMap.get(vertex)!,
             irTypeToLlvmType((vertex.verifiedType!)),
