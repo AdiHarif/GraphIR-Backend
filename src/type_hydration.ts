@@ -14,6 +14,9 @@ function typeNameToType(typeName: string): ir.Type {
     if (typeName == 'Number') {
         return new ir.NumberType();
     }
+    else if (typeName == 'Void') {
+        return new ir.VoidType();
+    }
     else if (typeName.startsWith('Integer')) {
         const width = parseInt(typeName.slice(7));
         return new ir.IntegerType(width);
@@ -33,7 +36,13 @@ function typeNameToType(typeName: string): ir.Type {
         const returnTypeName = typeName.slice(arrowIndex + 2);
         const returnType = typeNameToType(returnTypeName);
         const argTypeNames = typeName.slice(1, arrowIndex - 1).split(',');
-        const argTypes = argTypeNames.map(typeNameToType);
+        let argTypes: ir.Type[];
+        if (argTypeNames.length == 1 && argTypeNames[0] == '') {
+            argTypes = [];
+        }
+        else {
+            argTypes = argTypeNames.map(typeNameToType);
+        }
         return new ir.FunctionType(returnType, argTypes);
     }
     else if (typeName.startsWith('StaticArray')) {

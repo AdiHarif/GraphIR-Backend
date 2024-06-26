@@ -7,11 +7,16 @@ import {
     LlvmFloatType,
     LlvmFunctionType,
     LlvmArrayType,
+    LlvmVoidType,
 } from './type.js';
 
 import { getVectorType } from './predefind_type.js';
 
 class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
+    visitVoidType(type: ir.VoidType): LlvmType {
+        return new LlvmVoidType();
+    }
+
     visitUnknownType(type: ir.UnknownType): LlvmType {
         throw new Error('Unknown types are not yet supported.');
     }
