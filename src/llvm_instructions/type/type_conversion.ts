@@ -8,6 +8,7 @@ import {
     LlvmFunctionType,
     LlvmArrayType,
     LlvmVoidType,
+    LlvmPointerType,
 } from './type.js';
 
 import { getVectorType } from './predefind_type.js';
@@ -48,7 +49,7 @@ class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
     }
 
     visitDynamicArrayType(type: ir.DynamicArrayType): LlvmType {
-        return getVectorType();
+        return new LlvmPointerType();
     }
 }
 
