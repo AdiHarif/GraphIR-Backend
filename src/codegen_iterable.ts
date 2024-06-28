@@ -8,7 +8,17 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
     private readonly verticesStack: Array<ir.Vertex> = [];
 
     constructor(private readonly graph: ir.Graph) {
+        this.trimUnreachableBlockEnds();
         this.verticesStack.push(graph.getStartVertex());
+    }
+
+    private trimUnreachableBlockEnds() {
+        this.graph.vertices.filter(v => v.kind == ir.VertexKind.BlockEnd).forEach(v => {
+            if (v.inEdges.length == 0) {
+                this.visited.add(v);
+                this.processed.add(v);
+            }
+        });
     }
 
     private pushPhiReachers(src: ir.BlockEndVertex) {
