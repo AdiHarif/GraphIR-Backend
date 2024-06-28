@@ -196,17 +196,6 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         );
         const out: Array<ins.Instruction> = [instruction];
 
-        if (objectType instanceof ir.DynamicArrayType) {
-            const methodExtension = irTypeToMethodExtension(objectType);
-            const initInstruction = new ins.VoidCallInstruction(
-                `create_vector_${methodExtension}`,
-                [
-                    { value: this.namesMap.get(vertex)!, type: new LlvmPointerType() }
-                ]
-            );
-            out.push(initInstruction);
-        }
-
         if (objectType instanceof ir.StaticArrayType) {
             vertex.args!.forEach((arg, index) => {
                 const tmpReg = `%r${vertex.id}.${arg.id}`;
@@ -226,16 +215,36 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             });
         }
         else {
-            vertex.args!.forEach(arg => {
-                const pushBackInstruction = new ins.VoidCallInstruction(
-                    'push_back',
+            const methodExtension = irTypeToMethodExtension(objectType);
+            if (vertex.args!.length == 1 && vertex.args![0].verifiedType instanceof ir.NumberType) {
+                const initInstruction = new ins.VoidCallInstruction(
+                    `create_sized_vector_${methodExtension}`,
                     [
                         { value: this.namesMap.get(vertex)!, type: new LlvmPointerType() },
-                        { value: this.namesMap.get(arg)!, type: irTypeToLlvmType(arg.verifiedType!)}
+                        { value: this.namesMap.get(vertex.args![0])!, type: irTypeToLlvmType(vertex.args![0].verifiedType!) }
                     ]
                 );
-                out.push(pushBackInstruction);
-            });
+                out.push(initInstruction);
+            }
+            else {
+                const initInstruction = new ins.VoidCallInstruction(
+                    `create_vector_${methodExtension}`,
+                    [
+                        { value: this.namesMap.get(vertex)!, type: new LlvmPointerType() }
+                    ]
+                );
+                out.push(initInstruction);
+                vertex.args!.forEach(arg => {
+                    const pushBackInstruction = new ins.VoidCallInstruction(
+                        'push_back',
+                        [
+                            { value: this.namesMap.get(vertex)!, type: new LlvmPointerType() },
+                            { value: this.namesMap.get(arg)!, type: irTypeToLlvmType(arg.verifiedType!)}
+                        ]
+                    );
+                    out.push(pushBackInstruction);
+                });
+            }
         }
         return out;
     }
