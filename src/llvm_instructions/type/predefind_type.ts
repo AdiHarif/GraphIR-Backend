@@ -13,3 +13,7 @@ class PredefinedLlvmType extends LlvmType {
 export function getVectorType(): LlvmType {
     return new PredefinedLlvmType('vector');
 }
+
+export function getSizeType(): LlvmType {
+    return new PredefinedLlvmType('size_t');
+}
