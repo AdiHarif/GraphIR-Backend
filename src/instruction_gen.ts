@@ -329,11 +329,25 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             throw new Error(`Only calls to static functions are supported`);
         }
         const functionName = (vertex.callee as ir.StaticSymbolVertex).name;
-        return [new ins.CallInstruction(
-            this.namesMap.get(vertex)!,
-            irTypeToLlvmType((vertex.verifiedType!)),
-            functionName,
-            vertex.args!.map(arg => { return { value: this.namesMap.get(arg)!, type: irTypeToLlvmType(arg.verifiedType!) }})
-        )];
+
+        let instruction: ins.Instruction;
+        const args = vertex.args!.map(arg => { return { value: this.namesMap.get(arg)!, type: irTypeToLlvmType(arg.verifiedType!) }})
+
+        if (vertex.verifiedType instanceof ir.VoidType) {
+            instruction = new ins.VoidCallInstruction(
+                functionName,
+                args
+            );
+        }
+        else {
+            instruction = new ins.CallInstruction(
+                this.namesMap.get(vertex)!,
+                irTypeToLlvmType((vertex.verifiedType!)),
+                functionName,
+                args
+            );
+        }
+
+        return [instruction];
     }
 }
