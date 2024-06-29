@@ -1,5 +1,6 @@
 
 import fs from 'fs';
+import assert from 'assert';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
@@ -14,6 +15,7 @@ import { instructionToString } from './llvm_instructions/string_instruction.js';
 import { LlvmFunctionType } from './llvm_instructions/type/type.js';
 import { irTypeToLlvmType } from './llvm_instructions/type/type_conversion.js';
 import { hydrateTypesFromFiles } from './type_hydration.js';
+import { ContextManager } from './context_manager.js';
 
 function parseCliArgs() {
     return yargs(hideBin(process.argv))
@@ -24,6 +26,25 @@ function parseCliArgs() {
 }
 
 const args = parseCliArgs();
+
+function generateLlvmContext(graph: ir.Graph): void {
+    const contextManager = new ContextManager();
+
+    function registerUsedNonPrimitiveTypes(graph: ir.Graph): void {
+        const usedTypes = new Array<ir.Type>();
+        for (const subgraph of graph.subgraphs) {
+            registerUsedNonPrimitiveTypes(subgraph);
+        }
+        for (const vertex of graph.vertices) {
+            if (vertex instanceof ir.AllocationVertex) {
+                assert(vertex.verifiedType);
+                contextManager.registerType(vertex.verifiedType);
+            }
+        }
+    }
+    registerUsedNonPrimitiveTypes(graph);
+    contextManager.dump(args['out-file'])
+}
 
 function generateLlvmIr(graph: ir.Graph): void {
     for (const subgraph of graph.subgraphs) {
@@ -59,6 +80,7 @@ function main() {
     if (args['out-file']) {
         fs.writeFileSync(args['out-file'], '');
     }
+    generateLlvmContext(graph);
     generateLlvmIr(graph);
 }
 
