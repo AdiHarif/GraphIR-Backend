@@ -116,6 +116,16 @@ export class LlvmArrayType extends LlvmType {
     }
 }
 
+export class LlvmStructType extends LlvmType {
+    constructor(public readonly fields: Array<LlvmType>) {
+        super();
+    }
+
+    get name(): string {
+        return `{${this.fields.map(f => f.name).join(', ')}}`;
+    }
+}
+
 export class LlvmFunctionType extends LlvmType {
     constructor(public readonly result: LlvmType, public readonly parameters: Array<LlvmType>) {
         super();
