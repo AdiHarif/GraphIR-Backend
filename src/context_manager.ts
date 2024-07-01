@@ -23,15 +23,15 @@ export class ContextManager {
         this.functionDeclarations.set(
             `create_vector_${methodExtension}`,
             new LlvmFunctionType(
-                new LlvmVoidType(),
-                [new LlvmPointerType()])
+                new LlvmPointerType(),
+                [])
         );
 
         this.functionDeclarations.set(
             `create_sized_vector_${methodExtension}`,
             new LlvmFunctionType(
                 new LlvmPointerType(),
-                [new LlvmPointerType(), getSizeType()]
+                [getSizeType()]
             )
         );
 
