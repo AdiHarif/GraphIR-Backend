@@ -4,7 +4,7 @@ import assert from "assert";
 import * as ir from "graphir";
 
 import * as ins from "./llvm_instructions/instruction.js";
-import { LlvmArrayType, LlvmNumericType, LlvmPointerType, LlvmType, LlvmVoidType } from "./llvm_instructions/type/type.js";
+import { LlvmArrayType, LlvmIntegerType, LlvmNumericType, LlvmPointerType, LlvmType, LlvmVoidType } from "./llvm_instructions/type/type.js";
 import { irTypeToLlvmType, irTypeToMethodExtension } from "./llvm_instructions/type/type_conversion.js";
 import { getVectorType } from "./llvm_instructions/type/predefind_type.js";
 
@@ -217,11 +217,27 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         else {
             const methodExtension = irTypeToMethodExtension(objectType);
             if (vertex.args!.length == 1 && vertex.args![0].verifiedType instanceof ir.NumberType) {
+                let sizeReg;
+                if (!(vertex.args![0].verifiedType instanceof ir.IntegerType)) {
+                    assert(vertex.args![0].verifiedType instanceof ir.FloatType);
+                    sizeReg = `%r${vertex.id}.0`;
+                    const castInstruction = new ins.CastInstruction(
+                        sizeReg,
+                        ins.LlvmCastOperation.FpToUi,
+                        irTypeToLlvmType(vertex.args![0].verifiedType!),
+                        this.namesMap.get(vertex.args![0])!,
+                        new LlvmIntegerType(64)
+                    );
+                    out.push(castInstruction);
+                }
+                else {
+                    sizeReg = this.namesMap.get(vertex.args![0])!;
+                }
                 const initInstruction = new ins.VoidCallInstruction(
                     `create_sized_vector_${methodExtension}`,
                     [
                         { value: this.namesMap.get(vertex)!, type: new LlvmPointerType() },
-                        { value: this.namesMap.get(vertex.args![0])!, type: irTypeToLlvmType(vertex.args![0].verifiedType!) }
+                        { value: sizeReg, type: new LlvmIntegerType(64) }
                     ]
                 );
                 out.push(initInstruction);
@@ -269,15 +285,33 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         }
         else if (objectType instanceof ir.DynamicArrayType) {
             const methodExtension = irTypeToMethodExtension(objectType);
+            const out = [];
+            let indexReg;
+            if (!(vertex.property!.verifiedType instanceof ir.IntegerType)) {
+                assert(vertex.property!.verifiedType instanceof ir.FloatType);
+                indexReg = `%r${vertex.id}.0`;
+                const castInstruction = new ins.CastInstruction(
+                    indexReg,
+                    ins.LlvmCastOperation.FpToUi,
+                    irTypeToLlvmType(vertex.property!.verifiedType!),
+                    this.namesMap.get(vertex.property!)!,
+                    new LlvmIntegerType(64)
+                );
+                out.push(castInstruction);
+            }
+            else {
+                indexReg = this.namesMap.get(vertex.property!)!;
+            }
             const setInstruction = new ins.VoidCallInstruction(
                 `set_${methodExtension}`,
                 [
                     { value: this.namesMap.get(vertex.object!)!, type: new LlvmPointerType() },
-                    { value: this.namesMap.get(vertex.property!)!, type: irTypeToLlvmType(vertex.property!.verifiedType!) },
+                    { value: indexReg, type: new LlvmIntegerType(64)},
                     { value: this.namesMap.get(vertex.value!)!, type: irTypeToLlvmType(vertex.value!.verifiedType!) }
                 ]
             );
-            return [setInstruction];
+            out.push(setInstruction);
+            return out;
         }
         else {
             throw new Error(`Unsupported object type`);
@@ -303,17 +337,35 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
             return [gepInstruction, loadInstruction];
         }
         else if (objectType instanceof ir.DynamicArrayType) {
+            const out = [];
             const methodExtension = irTypeToMethodExtension(objectType);
+            let indexReg;
+            if (!(vertex.property!.verifiedType instanceof ir.IntegerType)) {
+                assert(vertex.property!.verifiedType instanceof ir.FloatType);
+                indexReg = `%r${vertex.id}.0`;
+                const castInstruction = new ins.CastInstruction(
+                    indexReg,
+                    ins.LlvmCastOperation.FpToUi,
+                    irTypeToLlvmType(vertex.property!.verifiedType!),
+                    this.namesMap.get(vertex.property!)!,
+                    new LlvmIntegerType(64)
+                );
+                out.push(castInstruction);
+            }
+            else {
+                indexReg = this.namesMap.get(vertex.property!)!;
+            }
             const getInstruction = new ins.CallInstruction(
                 this.namesMap.get(vertex)!,
                 irTypeToLlvmType(vertex.verifiedType!),
                 `get_${methodExtension}`,
                 [
                     { value: this.namesMap.get(vertex.object!)!, type: new LlvmPointerType() },
-                    { value: this.namesMap.get(vertex.property!)!, type: irTypeToLlvmType(vertex.property!.verifiedType!) }
+                    { value: indexReg, type: new LlvmIntegerType(64) }
                 ]
             );
-            return [getInstruction];
+            out.push(getInstruction);
+            return out;
         }
         else {
             throw new Error(`Unsupported object type`);

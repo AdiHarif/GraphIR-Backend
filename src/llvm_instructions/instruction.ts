@@ -27,6 +27,7 @@ export enum LlvmCondition {
 
 export enum LlvmCastOperation {
     FpToSi = 'fptosi',
+    FpToUi = 'fptoui',
     SiToFp = 'sitofp',
 }
 
