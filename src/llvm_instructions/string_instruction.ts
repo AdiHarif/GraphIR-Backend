@@ -35,7 +35,7 @@ class InstructionStringVisitor implements InstructionVisitor<string> {
 
     visitReturnInstruction(instruction: ins.ReturnInstruction): string {
         let out = `ret ${instruction.type.name}`;
-        if (instruction.value) {
+        if (instruction.value !== undefined) {
             out += ` ${valueToString(instruction.value!, instruction.type)}`;
         }
         return out;

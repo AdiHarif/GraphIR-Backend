@@ -7,12 +7,12 @@ import { hideBin } from 'yargs/helpers';
 import * as ir from 'graphir'
 import { extractFromPath } from 'ts-graph-extractor'
 
-import { Function } from './llvm_instructions/instruction.js';
+import { Function, ReturnInstruction } from './llvm_instructions/instruction.js';
 import { CodeGenIterable } from './codegen_iterable.js';
 import { allocateNames } from './names_allocator.js';
 import { InstructionGenVisitor } from './instruction_gen.js';
 import { instructionToString } from './llvm_instructions/string_instruction.js';
-import { LlvmFunctionType } from './llvm_instructions/type/type.js';
+import { LlvmFunctionType, LlvmIntegerType } from './llvm_instructions/type/type.js';
 import { irTypeToLlvmType } from './llvm_instructions/type/type_conversion.js';
 import { hydrateTypesFromFiles } from './type_hydration.js';
 import { ContextManager } from './context_manager.js';
@@ -65,6 +65,10 @@ function generateLlvmIr(graph: ir.Graph): void {
     for (let vertex of iterableGraph) {
         const instructions = vertex.accept(instructionGenVisitor);
         llvm_function.instructions.push(...instructions);
+    }
+    if (function_name === 'main') {
+        llvm_function.instructions.pop();
+        llvm_function.instructions.push(new ReturnInstruction(new LlvmIntegerType(32), 0));
     }
     if (!args['out-file']) {
         console.log(instructionToString(llvm_function));
