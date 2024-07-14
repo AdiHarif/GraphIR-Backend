@@ -54,6 +54,9 @@ function typeNameToType(typeName: string): ir.Type {
         const innerTypeName = extractInnerTypeName(typeName);
         return new ir.DynamicArrayType(typeNameToType(innerTypeName));
     }
+    else if (typeName.startsWith('StaticString')) {
+        return new ir.StaticStringType(0);
+    }
     throw new Error(`Unsupported typename: ${typeName}`);
 }
 

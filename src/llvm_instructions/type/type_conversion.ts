@@ -44,6 +44,14 @@ class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
         return new LlvmFunctionType(result, parameters);
     }
 
+    visitStaticStringType(type: ir.StaticStringType): LlvmType {
+        return new LlvmPointerType();
+    }
+
+    visitDynamicStringType(type: ir.DynamicStringType): LlvmType {
+        throw new Error('Dynamic string types are not yet supported.');
+    }
+
     visitStaticArrayType(type: ir.StaticArrayType): LlvmType {
         return new LlvmArrayType(type.elementType.accept(this), type.length);
     }
