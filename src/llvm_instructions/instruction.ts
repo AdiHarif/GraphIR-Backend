@@ -14,15 +14,19 @@ export enum LlvmNumericOperation {
     Sub,
     Mul,
     Div,
+    Mod,
     LShift,
     LRShift,
     ARShift,
+    And,
+    Or
 }
 
 export enum LlvmCondition {
     Eq,
     Ne,
     Lt,
+    Leq
 }
 
 export enum LlvmCastOperation {

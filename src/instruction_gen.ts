@@ -13,6 +13,9 @@ const numericOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
     ['-', ins.LlvmNumericOperation.Sub],
     ['*', ins.LlvmNumericOperation.Mul],
     ['/', ins.LlvmNumericOperation.Div],
+    ['%', ins.LlvmNumericOperation.Mod],
+    ['&&', ins.LlvmNumericOperation.And],
+    ['||', ins.LlvmNumericOperation.Or]
 ]);
 
 const bitwiseOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
@@ -24,6 +27,7 @@ const comparisonOperatorsMap = new Map<ir.Operator, ins.LlvmCondition>([
     ['==', ins.LlvmCondition.Eq],
     ['!=', ins.LlvmCondition.Ne],
     ['<', ins.LlvmCondition.Lt],
+    ['<=', ins.LlvmCondition.Leq],
 ]);
 
 export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruction>> {

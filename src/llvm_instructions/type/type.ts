@@ -31,6 +31,7 @@ export class LlvmIntegerType extends LlvmNumericType {
             case ins.LlvmCondition.Eq: return `eq`;
             case ins.LlvmCondition.Ne: return `ne`;
             case ins.LlvmCondition.Lt: return `slt`;
+            case ins.LlvmCondition.Leq: return `sle`;
         }
     }
 
@@ -40,6 +41,9 @@ export class LlvmIntegerType extends LlvmNumericType {
             case ins.LlvmNumericOperation.Sub: return `sub`;
             case ins.LlvmNumericOperation.Mul: return `mul`;
             case ins.LlvmNumericOperation.Div: return `sdiv`;
+            case ins.LlvmNumericOperation.Mod: return `srem`;
+            case ins.LlvmNumericOperation.And: return `and`;
+            case ins.LlvmNumericOperation.Or: return `or`;
             case ins.LlvmNumericOperation.LShift: return `shl`;
             case ins.LlvmNumericOperation.LRShift: return `lshr`;
             case ins.LlvmNumericOperation.ARShift: return `ashr`;
@@ -72,6 +76,7 @@ export class LlvmFloatType extends LlvmNumericType {
             case ins.LlvmCondition.Eq: return `oeq`;
             case ins.LlvmCondition.Ne: return `one`;
             case ins.LlvmCondition.Lt: return `olt`;
+            case ins.LlvmCondition.Leq: return `ole`;
         }
     }
 
@@ -81,6 +86,9 @@ export class LlvmFloatType extends LlvmNumericType {
             case ins.LlvmNumericOperation.Sub: return `fsub`;
             case ins.LlvmNumericOperation.Mul: return `fmul`;
             case ins.LlvmNumericOperation.Div: return `fdiv`;
+            case ins.LlvmNumericOperation.Mod: return `frem`;
+            case ins.LlvmNumericOperation.And: return `and`;
+            case ins.LlvmNumericOperation.Or: return `or`;
             default: throw new Error(`Unsupported operation for float type: ${operation}`);
         }
     }
