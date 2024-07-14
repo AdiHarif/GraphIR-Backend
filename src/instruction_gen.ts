@@ -316,6 +316,14 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     }
 
     visitLoadVertex(vertex: ir.LoadVertex): Array<ins.Instruction> {
+        if (vertex.object instanceof ir.StaticSymbolVertex) {
+            const libName = vertex.object.name;
+            assert(vertex.property instanceof ir.StaticSymbolVertex);
+            const libFunctionName = vertex.property.name;
+            const functionName = `${libName}_${libFunctionName}`;
+            this.namesMap.set(vertex, functionName);
+            return [];
+        }
         const objectType = vertex.object!.verifiedType!;
         if (objectType instanceof ir.StaticArrayType) {
             const tmpReg = `%r${vertex.id}.0`;
@@ -374,10 +382,17 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
         if (vertex.callerObject) {
             throw new Error(`caller objects are not yet supported`);
         }
-        if (!(vertex.callee instanceof ir.StaticSymbolVertex)) {
-            throw new Error(`Only calls to static functions are supported`);
+
+        let functionName: string;
+        if (vertex.callee instanceof ir.StaticSymbolVertex) {
+            functionName = (vertex.callee as ir.StaticSymbolVertex).name;
         }
-        const functionName = (vertex.callee as ir.StaticSymbolVertex).name;
+        else if (vertex.callee instanceof ir.LoadVertex) {
+            functionName = this.namesMap.get(vertex.callee)!;
+        }
+        else {
+            throw new Error(`Unsupported callee type`);
+        }
 
         let instruction: ins.Instruction;
         const args = vertex.args!.map(arg => { return { value: this.namesMap.get(arg)!, type: irTypeToLlvmType(arg.verifiedType!) }})
