@@ -256,7 +256,7 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
                 out.push(initInstruction);
                 vertex.args!.forEach(arg => {
                     const pushBackInstruction = new ins.VoidCallInstruction(
-                        'push_back',
+                        `push_back_${methodExtension}`,
                         [
                             { value: this.namesMap.get(vertex)!, type: new LlvmPointerType() },
                             { value: this.namesMap.get(arg)!, type: irTypeToLlvmType(arg.verifiedType!)}
