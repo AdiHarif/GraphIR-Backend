@@ -78,3 +78,18 @@ export function irTypeToMethodExtension(irType: ir.Type): string {
         return irTypeToLlvmType(irType).name;
     }
 }
+
+export function irTypeToCppTypeName(irType: ir.Type): string {
+    if (irType instanceof ir.IntegerType) {
+        return `int${irType.width}_t`;
+    }
+    else if (irType instanceof ir.FloatType) {
+        return `double`;
+    }
+    else if (irType instanceof ir.DynamicArrayType) {
+        return `vector<${irTypeToCppTypeName(irType.elementType)}>*`;
+    }
+    else {
+        throw new Error('Unsupported type');
+    }
+}

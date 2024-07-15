@@ -7,12 +7,13 @@ import * as ir from 'graphir';
 import { LlvmStructType, LlvmFunctionType, LlvmType, LlvmPointerType, LlvmVoidType, LlvmIntegerType } from './llvm_instructions/type/type.js';
 import { irTypeToLlvmType, irTypeToMethodExtension } from './llvm_instructions/type/type_conversion.js';
 import { getSizeType, getVectorType } from './llvm_instructions/type/predefind_type.js';
-
+import { InstantiationConfig } from './instantiation.js';
 
 export class ContextManager {
     private typeDeclarations: Map<string, LlvmType> = new Map();
     private functionDeclarations: Map<string, LlvmFunctionType> = new Map();
     private staticStrings: Map<number, string> = new Map();
+    public readonly instantiations: Array<InstantiationConfig> = [];
 
     constructor() {
         this.typeDeclarations.set(getSizeType().name, new LlvmIntegerType(64));
@@ -91,6 +92,14 @@ export class ContextManager {
         );
     }
 
+    private registerInstantiation(lib: string, elementType: ir.Type): void {
+        const instantiation = new InstantiationConfig(lib, elementType);
+        if (this.instantiations.some(i => i.methodExtension === instantiation.methodExtension)) {
+            return;
+        }
+        this.instantiations.push(new InstantiationConfig(lib, elementType));
+    }
+
     public registerType(type: ir.Type): void {
         assert(type instanceof ir.StaticArrayType || type instanceof ir.DynamicArrayType);
         if (type instanceof ir.StaticArrayType) {
@@ -103,6 +112,7 @@ export class ContextManager {
         );
 
         this.registerVectorFunctions(type);
+        this.registerInstantiation('templates/vector.cpp', type.elementType);
     }
 
     public registerStaticString(index: number, value: string): void {

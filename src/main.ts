@@ -16,20 +16,22 @@ import { LlvmFunctionType, LlvmIntegerType } from './llvm_instructions/type/type
 import { irTypeToLlvmType } from './llvm_instructions/type/type_conversion.js';
 import { hydrateTypesFromFiles } from './type_hydration.js';
 import { ContextManager } from './context_manager.js';
+import { instantiateLib } from './instantiation.js';
 
 function parseCliArgs() {
     return yargs(hideBin(process.argv))
         .option('input-file', { alias: 'i', type: 'string', description: 'Input file', demandOption: true })
         .option('out-file', { alias: 'o', type: 'string', description: 'Output file'})
         .option('types-file', { alias: 't', type: 'string', description: 'Types file', demandOption: true})
+        .option('instantiate-libs',{boolean: true, description: 'Instantiate required libraries from templates', default: false})
+        .option('instantiate-dir', {type: 'string', description: 'Directory to instantiate libraries', default: 'out'})
         .parseSync();
 }
 
 const args = parseCliArgs();
+const contextManager = new ContextManager();
 
 function generateLlvmContext(graph: ir.Graph): void {
-    const contextManager = new ContextManager();
-
     function registerUsedNonPrimitiveTypes(graph: ir.Graph): void {
         const usedTypes = new Array<ir.Type>();
         for (const subgraph of graph.subgraphs) {
@@ -99,6 +101,12 @@ function main() {
     }
     generateLlvmContext(graph);
     generateLlvmIr(graph);
+
+    if (args['instantiate-libs']) {
+        for (const instantiation of contextManager.instantiations) {
+            instantiateLib(instantiation, args['instantiate-dir']);
+        }
+    }
 }
 
 main();

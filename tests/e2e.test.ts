@@ -14,9 +14,9 @@ function compileAndRunFile(tsFile: string) {
     execSync(`souffle -D../../out -F../../out post_processing.dl`, { cwd: "submodules/GraphIR-Static-Analysis" });
 
     const llvmIrFile = `out/${path.basename(tsFile, '.ts')}.ll`;
-    execSync(`npm start -- -i ${tsFile} -o ${llvmIrFile} -t out/full_type.csv`);
+    execSync(`npm start -- -i ${tsFile} -o ${llvmIrFile} -t out/full_type.csv --instantiate-libs`);
 
-    execSync(`llvm-link -S ${llvmIrFile} *.ll lib/*.ll -o out/linked.ll`);
+    execSync(`llvm-link -S out/*.ll lib/*.ll -o out/linked.ll`);
     execSync(`llc -filetype=obj out/linked.ll -o out/main.o`);
     execSync(`clang++ out/main.o -o out/main`);
 
