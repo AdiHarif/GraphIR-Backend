@@ -16,6 +16,8 @@ export class ContextManager {
 
     constructor() {
         this.typeDeclarations.set(getSizeType().name, new LlvmIntegerType(64));
+        this.registerMathFunctions();
+        this.registerConsoleFunctions();
     }
 
     private registerVectorFunctions(type: ir.DynamicArrayType): void {
@@ -64,6 +66,26 @@ export class ContextManager {
             `size_${methodExtension}`,
             new LlvmFunctionType(
                 getSizeType(),
+                [new LlvmPointerType()]
+            )
+        );
+    }
+
+    private registerMathFunctions(): void {
+        this.functionDeclarations.set(
+            'Math_floor',
+            new LlvmFunctionType(
+                new LlvmIntegerType(64),
+                [new LlvmIntegerType(64)]
+            )
+        );
+    }
+
+    private registerConsoleFunctions(): void {
+        this.functionDeclarations.set(
+            'console_log',
+            new LlvmFunctionType(
+                new LlvmVoidType(),
                 [new LlvmPointerType()]
             )
         );
