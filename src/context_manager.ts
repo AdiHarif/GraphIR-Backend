@@ -12,6 +12,7 @@ import { getSizeType, getVectorType } from './llvm_instructions/type/predefind_t
 export class ContextManager {
     private typeDeclarations: Map<string, LlvmType> = new Map();
     private functionDeclarations: Map<string, LlvmFunctionType> = new Map();
+    private staticStrings: Map<number, string> = new Map();
 
     constructor() {
         this.typeDeclarations.set(getSizeType().name, new LlvmIntegerType(64));
@@ -82,6 +83,10 @@ export class ContextManager {
         this.registerVectorFunctions(type);
     }
 
+    public registerStaticString(index: number, value: string): void {
+        this.staticStrings.set(index, value);
+    }
+
     public dump(outFile?: fs.PathOrFileDescriptor): void {
         let dumpFunctions;
         if (outFile) {
@@ -99,5 +104,8 @@ export class ContextManager {
             dumpFunctions(`declare ${type.result.name} @${name}(${type.parameters.map(p => p.name).join(', ')})`);
         }
         dumpFunctions('');
+        for (const [index, value] of this.staticStrings) {
+            dumpFunctions(`@.s${index} = private unnamed_addr constant [${value.length + 1} x i8] c"${value}\\00"`);
+        }
     }
 }

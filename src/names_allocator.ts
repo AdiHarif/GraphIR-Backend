@@ -26,6 +26,9 @@ export function allocateNames(graph: ir.Graph): Map<ir.Vertex, NamedValue> {
             if (vertex.kind == ir.VertexKind.Parameter) {
                 regName = `%${(vertex as ir.ParameterVertex).position}`;
             }
+            else if (vertex instanceof ir.LiteralVertex && typeof vertex.value === 'string') {
+                regName = `@.s${vertex.id}`;
+            }
             else {
                 regName = `%r${lastReg++}`;
             }

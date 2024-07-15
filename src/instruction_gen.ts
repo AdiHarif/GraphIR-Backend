@@ -34,6 +34,9 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     constructor(private readonly namesMap: Map<ir.Vertex, ins.NamedValue>) { }
 
     visitLiteralVertex(vertex: ir.LiteralVertex): Array<ins.Instruction> {
+        if (typeof vertex.value === 'string') {
+            return [];
+        }
         const instruction = new ins.BinaryOperationInstruction(
             this.namesMap.get(vertex)!,
             irTypeToLlvmType(vertex.verifiedType!) as LlvmNumericType,

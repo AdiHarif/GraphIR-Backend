@@ -42,7 +42,20 @@ function generateLlvmContext(graph: ir.Graph): void {
             }
         }
     }
+
+    function registerStaticStrings(graph: ir.Graph): void {
+        for (const subgraph of graph.subgraphs) {
+            registerStaticStrings(subgraph);
+        }
+        for (const vertex of graph.vertices) {
+            if (vertex instanceof ir.LiteralVertex && typeof vertex.value === 'string') {
+                contextManager.registerStaticString(vertex.id, vertex.value);
+            }
+        }
+    }
+
     registerUsedNonPrimitiveTypes(graph);
+    registerStaticStrings(graph);
     contextManager.dump(args['out-file'])
 }
 
