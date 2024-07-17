@@ -173,12 +173,28 @@ export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruc
     }
 
     visitBranchVertex(vertex: ir.BranchVertex): Array<ins.Instruction> {
+        let conditionReg = this.namesMap.get(vertex.condition!)!;
+        const out = [];
+        if (!(vertex.condition!.verifiedType instanceof ir.IntegerType)) {
+            assert(vertex.condition!.verifiedType instanceof ir.FloatType);
+            const tmpReg = `%r${vertex.id}.0`;
+            const castInstruction = new ins.CastInstruction(
+                tmpReg,
+                ins.LlvmCastOperation.FpToSi,
+                irTypeToLlvmType(vertex.condition!.verifiedType!),
+                conditionReg,
+                new LlvmIntegerType(1)
+            );
+            conditionReg = tmpReg;
+            out.push(castInstruction);
+        }
         const instruction = new ins.BranchInstruction(
-            this.namesMap.get(vertex.condition!)!,
+            conditionReg,
             this.namesMap.get(vertex.trueNext!)!,
             this.namesMap.get(vertex.falseNext!)!
         );
-        return [instruction];
+        out.push(instruction);
+        return out;
     }
 
     visitMergeVertex(vertex: ir.MergeVertex): Array<ins.Instruction> {
