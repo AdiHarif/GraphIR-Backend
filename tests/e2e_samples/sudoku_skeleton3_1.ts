@@ -52,12 +52,12 @@ function verify(board) {
 			if (board[i][j] == 0) {
 				return false;
 			}
-			if (row_check[board[i][j]] != 0) {
+			if (row_check[board[i][j]]) {
 				return false;
 			}
 			row_check[board[i][j]] = 1;
 
-			if (col_check[board[j][i]] != 0) {
+			if (col_check[board[j][i]]) {
 				return false;
 			}
 			col_check[board[j][i]] = 1;
@@ -66,24 +66,24 @@ function verify(board) {
 		i = i + 1;
 	}
 
-	i = 0;
-	while (i < 9) {
-		let j = 0;
-		while (j < 9) {
+	let i2 = 0;
+	while (i2 < 9) {
+		let j2 = 0;
+		while (j2 < 9) {
 			let check = new Array(10);
 			let k = 0;
 			while (k < 9) {
-				let x = i + Math.floor(k / 3);
-				let y = j + (k % 3);
-				if (check[board[x][y]] != 0) {
+				let x = i2 + Math.floor(k / 3);
+				let y = j2 + (k % 3);
+				if (check[board[x][y]]) {
 					return false;
 				}
 				check[board[x][y]] = 1;
 				k = k + 1;
 			}
-			j = j + 3;
+			j2 = j2 + 3;
 		}
-		i = i + 3;
+		i2 = i2 + 3;
 	}
 	return true;
 }
@@ -108,6 +108,7 @@ function _main() {
 		return;
 	}
 	console.log("Verification failed");
+	console.log(board);
 }
 
 _main();
