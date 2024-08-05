@@ -24,6 +24,10 @@ class CppContextManager extends ContextManager {
         if (type instanceof ir.FunctionType) {
             this.stdLibIncludes.add("functional");
         }
+
+        if (type instanceof ir.UnionType) {
+            this.externalIncludes.add("union");
+        }
     }
 
     public registerStaticString(id: number, value: string): void {}

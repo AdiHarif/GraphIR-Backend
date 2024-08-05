@@ -5,6 +5,7 @@ import * as ir from 'graphir';
 
 import * as cppType from './type.js';
 import * as cppLibType from './lib_types.js';
+import * as cppCustomType from './custom_types.js';
 
 class TypeConversionVisitor implements ir.TypeVisitor<cppType.Type> {
     visitVoidType(type: ir.VoidType): cppType.Type {
@@ -57,6 +58,10 @@ class TypeConversionVisitor implements ir.TypeVisitor<cppType.Type> {
     visitDynamicArrayType(type: ir.DynamicArrayType): cppType.Type {
         const vectorType = new cppLibType.VectorType(type.elementType.accept(this));
         return new cppLibType.SharedPointerType(vectorType);
+    }
+
+    visitUnionType(type: ir.UnionType): cppType.Type {
+        return new cppCustomType.UnionType();
     }
 }
 

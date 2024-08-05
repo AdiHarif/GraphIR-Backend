@@ -17,3 +17,7 @@ export function getVectorType(): LlvmType {
 export function getSizeType(): LlvmType {
     return new PredefinedLlvmType('size_t');
 }
+
+export function getUnionType(): LlvmType {
+    return new PredefinedLlvmType('struct.UnionValue');
+}

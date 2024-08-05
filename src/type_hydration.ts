@@ -57,6 +57,9 @@ function typeNameToType(typeName: string): ir.Type {
     else if (typeName.startsWith('StaticString')) {
         return new ir.StaticStringType(0);
     }
+    else if (typeName.startsWith('Union')) {
+        return new ir.UnionType([]);
+    }
     throw new Error(`Unsupported typename: ${typeName}`);
 }
 

@@ -11,7 +11,7 @@ import {
     LlvmPointerType,
 } from './type.js';
 
-import { getVectorType } from './predefind_type.js';
+import { getUnionType, getVectorType } from './predefind_type.js';
 
 class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
     visitVoidType(type: ir.VoidType): LlvmType {
@@ -50,6 +50,10 @@ class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
 
     visitDynamicStringType(type: ir.DynamicStringType): LlvmType {
         throw new Error('Dynamic string types are not yet supported.');
+    }
+
+    visitUnionType(type: ir.UnionType): LlvmType {
+        return getUnionType();
     }
 
     visitStaticArrayType(type: ir.StaticArrayType): LlvmType {

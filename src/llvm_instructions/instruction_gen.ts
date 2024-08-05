@@ -175,8 +175,7 @@ export class LlvmInstructionGenVisitor implements ir.VertexVisitor<Array<ins.Ins
     visitBranchVertex(vertex: ir.BranchVertex): Array<ins.Instruction> {
         let conditionReg = this.namesMap.get(vertex.condition!)!;
         const out = [];
-        if (!(vertex.condition!.verifiedType instanceof ir.IntegerType)) {
-            assert(vertex.condition!.verifiedType instanceof ir.FloatType);
+        if (vertex.condition!.verifiedType instanceof ir.FloatType) {
             const tmpReg = `%r${vertex.id}.0`;
             const castInstruction = new ins.CastInstruction(
                 tmpReg,
@@ -188,6 +187,18 @@ export class LlvmInstructionGenVisitor implements ir.VertexVisitor<Array<ins.Ins
             conditionReg = tmpReg;
             out.push(castInstruction);
         }
+        if (vertex.condition!.verifiedType instanceof ir.UnionType) {
+            const tmpReg = `%r${vertex.id}.0`;
+            const castInstruction = new ins.CallInstruction(
+                tmpReg,
+                new LlvmIntegerType(1),
+                'union_value_to_boolean',
+                [{ value: this.namesMap.get(vertex.condition!)!, type: new LlvmPointerType() }]
+            )
+            conditionReg = tmpReg;
+            out.push(castInstruction);
+        }
+
         const instruction = new ins.BranchInstruction(
             conditionReg,
             this.namesMap.get(vertex.trueNext!)!,
