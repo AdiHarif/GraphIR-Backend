@@ -11,7 +11,7 @@ beforeEach(() => {
 
 function compileAndRunFile(tsFile: string) {
     execSync(`npm start -- -i ../../${tsFile} -o ../../out -f csv`, { cwd: "submodules/TS-Graph-Extractor" });
-    execSync(`souffle -D../../out -F../../out post_processing.dl`, { cwd: "submodules/GraphIR-Static-Analysis" });
+    execSync(`souffle -D../../out -F../../out src/main.dl`, { cwd: "submodules/GraphIR-Static-Analysis" });
 
     const cppFile = `out/${path.basename(tsFile, '.ts')}.cpp`;
     execSync(`npm start -- -i ${tsFile} -o ${cppFile} -f cpp -t out/full_type.csv`);
