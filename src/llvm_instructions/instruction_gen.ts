@@ -3,10 +3,10 @@ import assert from "assert";
 
 import * as ir from "graphir";
 
-import * as ins from "./llvm_instructions/instruction.js";
-import { LlvmArrayType, LlvmIntegerType, LlvmNumericType, LlvmPointerType, LlvmType, LlvmVoidType } from "./llvm_instructions/type/type.js";
-import { irTypeToLlvmType, irTypeToMethodExtension } from "./llvm_instructions/type/type_conversion.js";
-import { getVectorType } from "./llvm_instructions/type/predefind_type.js";
+import * as ins from "./instruction.js";
+import { LlvmArrayType, LlvmIntegerType, LlvmNumericType, LlvmPointerType, LlvmType, LlvmVoidType } from "./type/type.js";
+import { irTypeToLlvmType, irTypeToMethodExtension } from "./type/type_conversion.js";
+import { getVectorType } from "./type/predefind_type.js";
 
 const numericOperatorsMap = new Map<ir.Operator, ins.LlvmNumericOperation>([
     ['+', ins.LlvmNumericOperation.Add],
@@ -30,7 +30,7 @@ const comparisonOperatorsMap = new Map<ir.Operator, ins.LlvmCondition>([
     ['<=', ins.LlvmCondition.Leq],
 ]);
 
-export class InstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruction>> {
+export class LlvmInstructionGenVisitor implements ir.VertexVisitor<Array<ins.Instruction>> {
     constructor(private readonly namesMap: Map<ir.Vertex, ins.NamedValue>) { }
 
     visitLiteralVertex(vertex: ir.LiteralVertex): Array<ins.Instruction> {
