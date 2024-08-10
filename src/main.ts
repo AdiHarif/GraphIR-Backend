@@ -15,8 +15,9 @@ import { instructionToString } from './llvm_instructions/string_instruction.js';
 import { LlvmFunctionType, LlvmIntegerType } from './llvm_instructions/type/type.js';
 import { irTypeToLlvmType } from './llvm_instructions/type/type_conversion.js';
 import { hydrateTypesFromFiles } from './type_hydration.js';
-import { ContextManager } from './context_manager.js';
+import { LlvmContextManager } from './llvm_instructions/context_manager.js';
 import { instantiateLib } from './instantiation.js';
+import { ContextManager } from './context_manager.js';
 
 function parseCliArgs() {
     return yargs(hideBin(process.argv))
@@ -29,9 +30,8 @@ function parseCliArgs() {
 }
 
 const args = parseCliArgs();
-const contextManager = new ContextManager();
 
-function generateLlvmContext(graph: ir.Graph): void {
+function generateContext(graph: ir.Graph, contextManager: ContextManager): void {
     function registerUsedNonPrimitiveTypes(graph: ir.Graph): void {
         const usedTypes = new Array<ir.Type>();
         for (const subgraph of graph.subgraphs) {
@@ -99,7 +99,10 @@ function main() {
     if (args['out-file']) {
         fs.writeFileSync(args['out-file'], '');
     }
-    generateLlvmContext(graph);
+
+    const contextManager = new LlvmContextManager();
+    generateContext(graph, contextManager);
+
     generateLlvmIr(graph);
 
     if (args['instantiate-libs']) {
