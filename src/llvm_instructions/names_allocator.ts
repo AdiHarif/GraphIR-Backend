@@ -3,10 +3,10 @@ import assert from 'assert';
 
 import * as ir from 'graphir';
 
-import { NamedValue, Label } from './llvm_instructions/instruction.js';
-import { CodeGenIterable } from './codegen_iterable.js';
+import { NamedValue, Label } from './instruction.js';
+import { CodeGenIterable } from '../codegen_iterable.js';
 
-export function allocateNames(graph: ir.Graph): Map<ir.Vertex, NamedValue> {
+export function allocateLlvmNames(graph: ir.Graph): Map<ir.Vertex, NamedValue> {
     const map = new Map<ir.Vertex, NamedValue>();
     let lastLabel = 0;
     for (let vertex of new CodeGenIterable(graph)) {

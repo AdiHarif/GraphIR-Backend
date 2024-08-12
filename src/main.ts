@@ -9,7 +9,7 @@ import { extractFromPath } from 'ts-graph-extractor'
 
 import { Function, ReturnInstruction } from './llvm_instructions/instruction.js';
 import { CodeGenIterable } from './codegen_iterable.js';
-import { allocateNames } from './names_allocator.js';
+import { allocateLlvmNames } from './llvm_instructions/names_allocator.js';
 import { LlvmInstructionGenVisitor } from './llvm_instructions/instruction_gen.js';
 import { instructionToString } from './llvm_instructions/string_instruction.js';
 import { LlvmFunctionType, LlvmIntegerType } from './llvm_instructions/type/type.js';
@@ -27,6 +27,7 @@ import * as decl from './cpp/ast/decl.js';
 import * as stmt from './cpp/ast/stmt.js';
 import * as expr from './cpp/ast/expr.js';
 import { CppCodeGenVisitor, AstNode } from './cpp/code_gen.js';
+import { allocateCppNames } from './cpp/names_allocator.js';
 
 function parseCliArgs() {
     return yargs(hideBin(process.argv))
@@ -84,7 +85,7 @@ function generateLlvmIr(graph: ir.Graph): void {
     }
     const function_type = irTypeToLlvmType(graph.verifiedType!) as LlvmFunctionType;
     const llvm_function = new Function(function_name, function_type);
-    const names = allocateNames(graph);
+    const names = allocateLlvmNames(graph);
     const instructionGenVisitor = new LlvmInstructionGenVisitor(names);
     const iterableGraph = new CodeGenIterable(graph);
     for (let vertex of iterableGraph) {
@@ -117,7 +118,7 @@ function generateCpp(graph: ir.Graph): void {
     const function_type = (irTypeToCppType(graph.verifiedType!) as cppType.FunctionType);
     const parameters = function_type.parameters.map((t, i) => new decl.ParamDecl(t, `p${i}`));
     const cpp_function = new decl.FuncDecl(function_type.returnType, function_name, parameters, new stmt.BlockStmt([]));
-    const names = allocateNames(graph);
+    const names = allocateCppNames(graph);
     const instructionGenVisitor = new CppCodeGenVisitor(names);
     const iterableGraph = new CodeGenIterable(graph);
     for (let vertex of iterableGraph) {
