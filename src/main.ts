@@ -15,15 +15,25 @@ import { instructionToString } from './llvm_instructions/string_instruction.js';
 import { LlvmFunctionType, LlvmIntegerType } from './llvm_instructions/type/type.js';
 import { irTypeToLlvmType } from './llvm_instructions/type/type_conversion.js';
 import { hydrateTypesFromFiles } from './type_hydration.js';
-import { LlvmContextManager } from './llvm_instructions/context_manager.js';
 import { instantiateLib } from './instantiation.js';
+
 import { ContextManager } from './context_manager.js';
+import { LlvmContextManager } from './llvm_instructions/context_manager.js';
+import { CppContextManager } from './cpp/context_manager.js';
+import { irTypeToCppType } from './cpp/type/type_conversion.js';
+
+import * as cppType from './cpp/type/type.js';
+import * as decl from './cpp/ast/decl.js';
+import * as stmt from './cpp/ast/stmt.js';
+import * as expr from './cpp/ast/expr.js';
+import { CppCodeGenVisitor, AstNode } from './cpp/code_gen.js';
 
 function parseCliArgs() {
     return yargs(hideBin(process.argv))
         .option('input-file', { alias: 'i', type: 'string', description: 'Input file', demandOption: true })
         .option('out-file', { alias: 'o', type: 'string', description: 'Output file'})
         .option('types-file', { alias: 't', type: 'string', description: 'Types file', demandOption: true})
+        .option('format', { alias: 'f', type: 'string', description: 'Output format', choices: ['llvm', 'cpp'], default: 'cpp'})
         .option('instantiate-libs',{boolean: true, description: 'Instantiate required libraries from templates', default: false})
         .option('instantiate-dir', {type: 'string', description: 'Directory to instantiate libraries', default: 'out'})
         .parseSync();
@@ -93,6 +103,42 @@ function generateLlvmIr(graph: ir.Graph): void {
     }
 }
 
+function generateCpp(graph: ir.Graph): void {
+    for (const subgraph of graph.subgraphs) {
+        generateCpp(subgraph);
+    }
+    let function_name;
+    if (graph.getStartVertex().inEdges.length > 0) {
+        function_name = (graph.getStartVertex().inEdges[0].source as ir.StaticSymbolVertex).name;
+    }
+    else {
+        function_name = 'main';
+    }
+    const function_type = (irTypeToCppType(graph.verifiedType!) as cppType.FunctionType);
+    const parameters = function_type.parameters.map((t, i) => new decl.ParamDecl(t, `p${i}`));
+    const cpp_function = new decl.FuncDecl(function_type.returnType, function_name, parameters, new stmt.BlockStmt([]));
+    const names = allocateNames(graph);
+    const instructionGenVisitor = new CppCodeGenVisitor(names);
+    const iterableGraph = new CodeGenIterable(graph);
+    for (let vertex of iterableGraph) {
+        const statement = vertex.accept<AstNode | void>(instructionGenVisitor);
+        if (!statement) {
+            continue;
+        }
+        cpp_function.body.statements.push(statement);
+    }
+    if (function_name === 'main') {
+        cpp_function.body.statements.pop();
+        cpp_function.body.statements.push(new stmt.ReturnStmt(new expr.LiteralExpr(0)));
+    }
+    if (!args['out-file']) {
+        console.log(cpp_function.toString());
+    }
+    else {
+        fs.appendFileSync(args['out-file'], cpp_function.toString() + '\n');
+    }
+}
+
 function main() {
     const graph = extractFromPath(args['input-file']);
     hydrateTypesFromFiles(graph, args['types-file']);
@@ -100,13 +146,18 @@ function main() {
         fs.writeFileSync(args['out-file'], '');
     }
 
-    const contextManager = new LlvmContextManager();
+    const contextManager = args.format == 'llvm' ? new LlvmContextManager() : new CppContextManager();
     generateContext(graph, contextManager);
 
-    generateLlvmIr(graph);
+    if (args.format == 'llvm') {
+        generateLlvmIr(graph);
+    }
+    else {
+        generateCpp(graph);
+    }
 
-    if (args['instantiate-libs']) {
-        for (const instantiation of contextManager.instantiations) {
+    if (args.format == 'llvm' && args['instantiate-libs']) {
+        for (const instantiation of (contextManager as LlvmContextManager).instantiations) {
             instantiateLib(instantiation, args['instantiate-dir']);
         }
     }
