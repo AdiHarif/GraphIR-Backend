@@ -5,11 +5,11 @@
 
 class Math {
 public:
-    class Floor {
+    class floor {
     public:
         template <typename T>
         double operator()(const T& t) {
             return std::floor(t);
         }
-    } floor;
-} Math;
+    } _floor;
+} _Math;

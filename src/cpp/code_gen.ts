@@ -137,18 +137,15 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
 
     visitLoadVertex(vertex: ir.LoadVertex): Array<AstNode> {
         let right: expr.Expr;
-        let varType: type.Type;
         const name = this.namesMap.get(vertex)!;
         if (vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType! instanceof ir.DynamicArrayType) {
             const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
             right = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
-            return [CppCodeGenVisitor.createAssignmentStatement(name, right)];
         }
         else {
-            right = new expr.IdentifierExpr(`${this.namesMap.get(vertex.object!)!}.${this.namesMap.get(vertex.property!)!}`);
-            varType = new type.RefereceType(new type.AutoType());
-            return [new VarDecl(varType, name, right)];
+            right = new expr.IdentifierExpr(`_${this.namesMap.get(vertex.object!)!}._${this.namesMap.get(vertex.property!)!}`);
         }
+        return [CppCodeGenVisitor.createAssignmentStatement(name, right)];
     }
 
     visitCallVertex(vertex: ir.CallVertex): Array<AstNode> {

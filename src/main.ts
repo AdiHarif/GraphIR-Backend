@@ -124,12 +124,31 @@ function generateCpp(graph: ir.Graph): void {
     const cpp_function = new decl.FuncDecl(function_type.returnType, function_name, parameters, new stmt.BlockStmt([]));
     const names = allocateCppNames(graph);
 
-    const variableDeclarations = [...new CodeGenIterable(graph)]
+    const dataVertices = [...new CodeGenIterable(graph)]
         .filter(v => (v instanceof ir.DataVertex || v instanceof ir.CompoundVertex) && !(v instanceof ir.StaticSymbolVertex))
-        .filter(v => !((v as ir.DataVertex).verifiedType! instanceof ir.VoidType) && !((v as ir.DataVertex).verifiedType! instanceof ir.FunctionType))
         .filter(v => !(v instanceof ir.ParameterVertex))
+
+    const variableDeclarations = dataVertices
+        .filter(v => !((v as ir.DataVertex).verifiedType! instanceof ir.VoidType) && !((v as ir.DataVertex).verifiedType! instanceof ir.FunctionType))
         .map(v => new decl.VarDecl(irTypeToCppType((v as ir.DataVertex).verifiedType!), names.get(v)!));
     cpp_function.body.statements.push(...variableDeclarations);
+
+    const functorVariableDeclarations = dataVertices
+        .filter(v => (v as ir.DataVertex).verifiedType! instanceof ir.FunctionType)
+        .map(v => {
+            assert(v instanceof ir.LoadVertex);
+            let type;
+            if (v.verifiedType instanceof ir.StaticArrayType || v.verifiedType instanceof ir.DynamicArrayType) {
+                type = irTypeToCppType(v.verifiedType!);
+            }
+            else {
+                assert(v instanceof ir.LoadVertex);
+                assert(v.object instanceof ir.StaticSymbolVertex && v.property instanceof ir.StaticSymbolVertex);
+                type = new cppType.ScopedType(v.object.name, v.property.name);
+            }
+            return new decl.VarDecl(type, names.get(v)!);
+        });
+    cpp_function.body.statements.push(...functorVariableDeclarations);
 
     const instructionGenVisitor = new CppCodeGenVisitor(names);
     const iterableGraph = new CodeGenIterable(graph);

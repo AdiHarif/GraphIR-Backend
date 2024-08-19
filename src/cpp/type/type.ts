@@ -107,4 +107,14 @@ class RefereceType extends Type {
     }
 }
 
-export { Type, ArrayType, TemplateType, PointerType, IntType, UnsignedIntType, FloatType, BooleanType, StringType, VoidType, FunctionType, AutoType, RefereceType };
+class ScopedType extends Type {
+    constructor(public scope: string, public name: string) {
+        super();
+    }
+
+    toString(): string {
+        return `${this.scope}::${this.name}`;
+    }
+}
+
+export { Type, ArrayType, TemplateType, PointerType, IntType, UnsignedIntType, FloatType, BooleanType, StringType, VoidType, FunctionType, AutoType, RefereceType, ScopedType };

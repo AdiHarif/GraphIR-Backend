@@ -1,13 +1,13 @@
 
 #include <iostream>
 
-class Console {
+class console {
 public:
-    class Log {
+    class log {
     public:
         template <typename T>
         void operator()(const T& t) {
             std::cout << t << std::endl;
         }
-    } log;
-} console;
+    } _log;
+} _console;
