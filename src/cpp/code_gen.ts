@@ -16,12 +16,14 @@ type AstNode = stmt.Stmt | Decl;
 class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     constructor(private readonly namesMap: Map<ir.Vertex, string>) { }
 
+    private static createAssignmentStatement(name: string, value: expr.Expr): stmt.ExprStmt {
+        return new stmt.ExprStmt(new expr.BinaryOperationExpr('=', new expr.IdentifierExpr(name), value));
+    }
+
     visitLiteralVertex(vertex: ir.LiteralVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
         assert(vertex.value !== undefined && vertex.value !== null);
-        let type = irTypeToCppType(vertex.verifiedType!);
-        const stmt = new VarDecl(type, name, new expr.LiteralExpr(vertex.value));
-        return [stmt];
+        return [CppCodeGenVisitor.createAssignmentStatement(name, new expr.LiteralExpr(vertex.value))];
     }
 
     visitStaticSymbolVertex(vertex: ir.StaticSymbolVertex): Array<AstNode> {
@@ -34,20 +36,16 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
 
     visitPrefixUnaryOperationVertex(vertex: ir.PrefixUnaryOperationVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
-        let type = irTypeToCppType(vertex.verifiedType!);
         const operandValue = new expr.IdentifierExpr(this.namesMap.get(vertex.operand!)!);
         const exprValue = new expr.PrefixUnaryOperationExpr(vertex.operator, operandValue);
-        const stmt = new VarDecl(type, name, exprValue);
-        return [stmt];
+        return [CppCodeGenVisitor.createAssignmentStatement(name, exprValue)];
     }
 
     visitPostfixUnaryOperationVertex(vertex: ir.PostfixUnaryOperationVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
-        let type = irTypeToCppType(vertex.verifiedType!);
         const operandValue = new expr.IdentifierExpr(this.namesMap.get(vertex.operand!)!);
         const exprValue = new expr.PostfixUnaryOperationExpr(vertex.operator, operandValue);
-        const stmt = new VarDecl(type, name, exprValue);
-        return [stmt];
+        return [CppCodeGenVisitor.createAssignmentStatement(name, exprValue)];
     }
 
     visitBinaryOperationVertex(vertex: ir.BinaryOperationVertex): Array<AstNode> {
@@ -56,8 +54,7 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
         const leftValue = new expr.IdentifierExpr(this.namesMap.get(vertex.left!)!);
         const rightValue = new expr.IdentifierExpr(this.namesMap.get(vertex.right!)!);
         const exprValue = new expr.BinaryOperationExpr(vertex.operator, leftValue, rightValue);
-        const stmt = new VarDecl(type, name, exprValue);
-        return [stmt];
+        return [CppCodeGenVisitor.createAssignmentStatement(name, exprValue)];
     }
 
     visitPhiVertex(vertex: ir.PhiVertex): Array<AstNode> {
@@ -106,7 +103,8 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
             initArg = new expr.CastingExpr(arrayType, initArg);
         }
         const init = new expr.TemplateCallExpr('std::make_shared', [initArg], [arrayType]);
-        return [new VarDecl(ptrType, this.namesMap.get(vertex)!, init)];
+        const name = this.namesMap.get(vertex)!;
+        return [CppCodeGenVisitor.createAssignmentStatement(name, init)];
     }
 
     visitStoreVertex(vertex: ir.StoreVertex): Array<AstNode> {
@@ -120,16 +118,17 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     visitLoadVertex(vertex: ir.LoadVertex): Array<AstNode> {
         let right: expr.Expr;
         let varType: type.Type;
+        const name = this.namesMap.get(vertex)!;
         if (vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType! instanceof ir.DynamicArrayType) {
             const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
             right = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
-            varType = irTypeToCppType(vertex.verifiedType!);
+            return [CppCodeGenVisitor.createAssignmentStatement(name, right)];
         }
         else {
             right = new expr.IdentifierExpr(`${this.namesMap.get(vertex.object!)!}.${this.namesMap.get(vertex.property!)!}`);
             varType = new type.RefereceType(new type.AutoType());
+            return [new VarDecl(varType, name, right)];
         }
-        return [new VarDecl(varType, this.namesMap.get(vertex)!, right)];
     }
 
     visitCallVertex(vertex: ir.CallVertex): Array<AstNode> {
@@ -140,7 +139,9 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
             out.push(new stmt.ExprStmt(call));
         }
         else {
-            out.push(new VarDecl(irTypeToCppType(vertex.verifiedType!), this.namesMap.get(vertex)!, call));
+            const name = this.namesMap.get(vertex)!;
+            out.push(CppCodeGenVisitor.createAssignmentStatement(name, call));
+
         }
         return out;
     }

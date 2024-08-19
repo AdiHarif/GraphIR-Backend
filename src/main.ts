@@ -123,6 +123,14 @@ function generateCpp(graph: ir.Graph): void {
     const parameters = function_type.parameters.map((t, i) => new decl.ParamDecl(t, `p${i}`));
     const cpp_function = new decl.FuncDecl(function_type.returnType, function_name, parameters, new stmt.BlockStmt([]));
     const names = allocateCppNames(graph);
+
+    const variableDeclarations = [...new CodeGenIterable(graph)]
+        .filter(v => (v instanceof ir.DataVertex || v instanceof ir.CompoundVertex) && !(v instanceof ir.StaticSymbolVertex))
+        .filter(v => !((v as ir.DataVertex).verifiedType! instanceof ir.VoidType) && !((v as ir.DataVertex).verifiedType! instanceof ir.FunctionType))
+        .filter(v => !(v instanceof ir.ParameterVertex))
+        .map(v => new decl.VarDecl(irTypeToCppType((v as ir.DataVertex).verifiedType!), names.get(v)!));
+    cpp_function.body.statements.push(...variableDeclarations);
+
     const instructionGenVisitor = new CppCodeGenVisitor(names);
     const iterableGraph = new CodeGenIterable(graph);
     for (let vertex of iterableGraph) {
