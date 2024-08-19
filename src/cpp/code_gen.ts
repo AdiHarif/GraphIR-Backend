@@ -7,6 +7,7 @@ import * as stmt from './ast/stmt.js';
 import * as expr from './ast/expr.js';
 import { Decl, LabelDecl, ParamDecl, VarDecl } from './ast/decl.js';
 
+import * as type from './type/type.js';
 import * as libType from './type/lib_types.js';
 import { irTypeToCppType } from './type/type_conversion.js';
 
@@ -112,14 +113,17 @@ class CppCodeGenVisitor implements ir.VertexVisitor<AstNode | void> {
 
     visitLoadVertex(vertex: ir.LoadVertex): AstNode {
         let right: expr.Expr;
+        let varType: type.Type;
         if (vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType! instanceof ir.DynamicArrayType) {
             const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
             right = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
+            varType = irTypeToCppType(vertex.verifiedType!);
         }
         else {
             right = new expr.IdentifierExpr(`${this.namesMap.get(vertex.object!)!}.${this.namesMap.get(vertex.property!)!}`);
+            varType = new type.RefereceType(new type.AutoType());
         }
-        return new VarDecl(irTypeToCppType(vertex.verifiedType!), this.namesMap.get(vertex)!, right);
+        return new VarDecl(varType, this.namesMap.get(vertex)!, right);
     }
 
     visitCallVertex(vertex: ir.CallVertex): AstNode {
