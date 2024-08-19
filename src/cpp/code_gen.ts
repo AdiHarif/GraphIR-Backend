@@ -50,9 +50,12 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
 
     visitBinaryOperationVertex(vertex: ir.BinaryOperationVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
-        let type = irTypeToCppType(vertex.verifiedType!);
-        const leftValue = new expr.IdentifierExpr(this.namesMap.get(vertex.left!)!);
-        const rightValue = new expr.IdentifierExpr(this.namesMap.get(vertex.right!)!);
+        let leftValue: expr.Expr = new expr.IdentifierExpr(this.namesMap.get(vertex.left!)!);
+        let rightValue: expr.Expr = new expr.IdentifierExpr(this.namesMap.get(vertex.right!)!);
+        if (vertex.operator == '%') {
+            leftValue = new expr.CastingExpr(new type.IntType(32), leftValue);
+            rightValue = new expr.CastingExpr(new type.IntType(32), rightValue);
+        }
         const exprValue = new expr.BinaryOperationExpr(vertex.operator, leftValue, rightValue);
         return [CppCodeGenVisitor.createAssignmentStatement(name, exprValue)];
     }
