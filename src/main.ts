@@ -50,6 +50,7 @@ function generateContext(graph: ir.Graph, contextManager: ContextManager): void 
         }
         for (const vertex of graph.vertices) {
             if (vertex instanceof ir.StaticSymbolVertex) {
+                contextManager.registerSymbol(vertex);
                 continue;
             }
             if (vertex instanceof ir.DataVertex || vertex instanceof ir.CompoundVertex) {

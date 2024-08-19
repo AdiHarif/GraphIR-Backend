@@ -121,6 +121,10 @@ export class LlvmContextManager extends ContextManager{
         this.staticStrings.set(index, value);
     }
 
+    public registerSymbol(vertex: ir.StaticSymbolVertex): void {
+        throw new Error('Method not implemented.');
+    }
+
     public dump(outFile?: fs.PathOrFileDescriptor): void {
         let dumpFunctions;
         if (outFile) {

@@ -6,21 +6,33 @@ import * as ir from "graphir";
 import { ContextManager } from "../context_manager.js";
 
 class CppContextManager extends ContextManager {
-    private libIncludes: Set<string> = new Set();
+    private stdLibIncludes: Set<string> = new Set();
+    private externalIncludes: Set<string> = new Set();
+
+    private static supportedExternalLibs = [
+        'console',
+        'Math'
+    ];
 
     public registerType(type: ir.Type): void {
         if (type instanceof ir.StaticArrayType || type instanceof ir.DynamicArrayType) {
-            this.libIncludes.add("memory");
+            this.stdLibIncludes.add("memory");
         }
         if (type instanceof ir.DynamicArrayType) {
-            this.libIncludes.add("vector");
+            this.stdLibIncludes.add("vector");
         }
         if (type instanceof ir.FunctionType) {
-            this.libIncludes.add("functional");
+            this.stdLibIncludes.add("functional");
         }
     }
 
     public registerStaticString(id: number, value: string): void {}
+
+    public registerSymbol(vertex: ir.StaticSymbolVertex): void {
+        if (CppContextManager.supportedExternalLibs.includes(vertex.name)) {
+            this.externalIncludes.add(vertex.name);
+        }
+    }
 
     public dump(outFile?: fs.PathOrFileDescriptor): void {
         let dumpFunction;
@@ -32,8 +44,13 @@ class CppContextManager extends ContextManager {
         }
         dumpFunction('');
 
-        for (const libInclude of this.libIncludes) {
+        for (const libInclude of this.stdLibIncludes) {
             dumpFunction(`#include <${libInclude}>`);
+        }
+        dumpFunction('');
+
+        for (const externalInclude of this.externalIncludes) {
+            dumpFunction(`#include "${externalInclude}.h"`);
         }
         dumpFunction('');
     }
