@@ -11,7 +11,11 @@ class LiteralExpr extends Expr {
     }
 
     toString(): string {
-        return this.value.toString();
+        let out = this.value.toString();
+        if (typeof this.value === "string") {
+            out = `"${out}"`;
+        }
+        return out;
     }
 }
 
