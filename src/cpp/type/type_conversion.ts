@@ -20,6 +20,9 @@ class TypeConversionVisitor implements ir.TypeVisitor<cppType.Type> {
     }
 
     visitIntegerType(type: ir.IntegerType): cppType.Type {
+        if (type.width == 1) {
+            return new cppType.BooleanType();
+        }
         assert(type.width == 8 || type.width == 16 || type.width == 32 || type.width == 64);
         return new cppType.IntType(type.width);
     }
