@@ -13,81 +13,87 @@ import { irTypeToCppType } from './type/type_conversion.js';
 
 type AstNode = stmt.Stmt | Decl;
 
-class CppCodeGenVisitor implements ir.VertexVisitor<AstNode | void> {
+class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     constructor(private readonly namesMap: Map<ir.Vertex, string>) { }
 
-    visitLiteralVertex(vertex: ir.LiteralVertex): AstNode {
+    visitLiteralVertex(vertex: ir.LiteralVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
         assert(vertex.value !== undefined && vertex.value !== null);
         let type = irTypeToCppType(vertex.verifiedType!);
         const stmt = new VarDecl(type, name, new expr.LiteralExpr(vertex.value));
-        return stmt;
+        return [stmt];
     }
 
-    visitStaticSymbolVertex(vertex: ir.StaticSymbolVertex): void {}
+    visitStaticSymbolVertex(vertex: ir.StaticSymbolVertex): Array<AstNode> {
+        return [];
+    }
 
-    visitParameterVertex(vertex: ir.ParameterVertex): void {}
+    visitParameterVertex(vertex: ir.ParameterVertex): Array<AstNode> {
+        return [];
+    }
 
-    visitPrefixUnaryOperationVertex(vertex: ir.PrefixUnaryOperationVertex): AstNode {
+    visitPrefixUnaryOperationVertex(vertex: ir.PrefixUnaryOperationVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
         let type = irTypeToCppType(vertex.verifiedType!);
         const operandValue = new expr.IdentifierExpr(this.namesMap.get(vertex.operand!)!);
         const exprValue = new expr.PrefixUnaryOperationExpr(vertex.operator, operandValue);
         const stmt = new VarDecl(type, name, exprValue);
-        return stmt;
+        return [stmt];
     }
 
-    visitPostfixUnaryOperationVertex(vertex: ir.PostfixUnaryOperationVertex): AstNode {
+    visitPostfixUnaryOperationVertex(vertex: ir.PostfixUnaryOperationVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
         let type = irTypeToCppType(vertex.verifiedType!);
         const operandValue = new expr.IdentifierExpr(this.namesMap.get(vertex.operand!)!);
         const exprValue = new expr.PostfixUnaryOperationExpr(vertex.operator, operandValue);
         const stmt = new VarDecl(type, name, exprValue);
-        return stmt;
+        return [stmt];
     }
 
-    visitBinaryOperationVertex(vertex: ir.BinaryOperationVertex): AstNode {
+    visitBinaryOperationVertex(vertex: ir.BinaryOperationVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
         let type = irTypeToCppType(vertex.verifiedType!);
         const leftValue = new expr.IdentifierExpr(this.namesMap.get(vertex.left!)!);
         const rightValue = new expr.IdentifierExpr(this.namesMap.get(vertex.right!)!);
         const exprValue = new expr.BinaryOperationExpr(vertex.operator, leftValue, rightValue);
         const stmt = new VarDecl(type, name, exprValue);
-        return stmt;
+        return [stmt];
     }
 
-    visitPhiVertex(vertex: ir.PhiVertex): AstNode {
+    visitPhiVertex(vertex: ir.PhiVertex): Array<AstNode> {
         throw new Error('Method not implemented.');
     }
 
-    visitStartVertex(vertex: ir.StartVertex): AstNode {
-        return new LabelDecl('start');
+    visitStartVertex(vertex: ir.StartVertex): Array<AstNode> {
+        return [new LabelDecl('start')];
     }
 
-    visitPassVertex(vertex: ir.PassVertex): void {}
-
-    visitBlockBeginVertex(vertex: ir.BlockBeginVertex): AstNode {
-        return new LabelDecl(this.namesMap.get(vertex)!);
+    visitPassVertex(vertex: ir.PassVertex): Array<AstNode> {
+        return [];
     }
 
-    visitBlockEndVertex(vertex: ir.BlockEndVertex): AstNode {
-        return new stmt.GotoStmt(this.namesMap.get(vertex.next!)!);
+    visitBlockBeginVertex(vertex: ir.BlockBeginVertex): Array<AstNode> {
+        return [new LabelDecl(this.namesMap.get(vertex)!)];
     }
 
-    visitReturnVertex(vertex: ir.ReturnVertex): AstNode {
+    visitBlockEndVertex(vertex: ir.BlockEndVertex): Array<AstNode> {
+        return [new stmt.GotoStmt(this.namesMap.get(vertex.next!)!)];
+    }
+
+    visitReturnVertex(vertex: ir.ReturnVertex): Array<AstNode> {
         const valueExpr = vertex.value ? new expr.IdentifierExpr(this.namesMap.get(vertex.value!)!) : undefined;
-        return new stmt.ReturnStmt(valueExpr);
+        return [new stmt.ReturnStmt(valueExpr)];
     }
 
-    visitBranchVertex(vertex: ir.BranchVertex): AstNode {
+    visitBranchVertex(vertex: ir.BranchVertex): Array<AstNode> {
         throw new Error('Method not implemented.');
     }
 
-    visitMergeVertex(vertex: ir.MergeVertex): AstNode {
-        throw new Error('Method not implemented.');
+    visitMergeVertex(vertex: ir.MergeVertex): Array<AstNode> {
+        return [new LabelDecl(this.namesMap.get(vertex)!)];
     }
 
-    visitAllocationVertex(vertex: ir.AllocationVertex): AstNode {
+    visitAllocationVertex(vertex: ir.AllocationVertex): Array<AstNode> {
         const ptrType = irTypeToCppType(vertex.verifiedType!);
         assert(ptrType instanceof libType.SharedPointerType);
         const arrayType = ptrType.elementType;
@@ -100,18 +106,18 @@ class CppCodeGenVisitor implements ir.VertexVisitor<AstNode | void> {
             initArg = new expr.CastingExpr(arrayType, initArg);
         }
         const init = new expr.TemplateCallExpr('std::make_shared', [initArg], [arrayType]);
-        return new VarDecl(ptrType, this.namesMap.get(vertex)!, init);
+        return [new VarDecl(ptrType, this.namesMap.get(vertex)!, init)];
     }
 
-    visitStoreVertex(vertex: ir.StoreVertex): AstNode {
+    visitStoreVertex(vertex: ir.StoreVertex): Array<AstNode> {
         assert(vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType! instanceof ir.DynamicArrayType);
         const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
         const left = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
         const right = new expr.IdentifierExpr(this.namesMap.get(vertex.value!)!);
-        return new stmt.ExprStmt(new expr.BinaryOperationExpr('=', left, right));
+        return [new stmt.ExprStmt(new expr.BinaryOperationExpr('=', left, right))];
     }
 
-    visitLoadVertex(vertex: ir.LoadVertex): AstNode {
+    visitLoadVertex(vertex: ir.LoadVertex): Array<AstNode> {
         let right: expr.Expr;
         let varType: type.Type;
         if (vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType! instanceof ir.DynamicArrayType) {
@@ -123,18 +129,20 @@ class CppCodeGenVisitor implements ir.VertexVisitor<AstNode | void> {
             right = new expr.IdentifierExpr(`${this.namesMap.get(vertex.object!)!}.${this.namesMap.get(vertex.property!)!}`);
             varType = new type.RefereceType(new type.AutoType());
         }
-        return new VarDecl(varType, this.namesMap.get(vertex)!, right);
+        return [new VarDecl(varType, this.namesMap.get(vertex)!, right)];
     }
 
-    visitCallVertex(vertex: ir.CallVertex): AstNode {
+    visitCallVertex(vertex: ir.CallVertex): Array<AstNode> {
         const args = vertex.args!.map(arg => new expr.IdentifierExpr(this.namesMap.get(arg)!));
         const call = new expr.CallExpr(this.namesMap.get(vertex.callee!)!, args);
+        let out = [];
         if (vertex.verifiedType instanceof ir.VoidType) {
-            return new stmt.ExprStmt(call);
+            out.push(new stmt.ExprStmt(call));
         }
         else {
-            return new VarDecl(irTypeToCppType(vertex.verifiedType!), this.namesMap.get(vertex)!, call);
+            out.push(new VarDecl(irTypeToCppType(vertex.verifiedType!), this.namesMap.get(vertex)!, call));
         }
+        return out;
     }
 }
 

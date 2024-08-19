@@ -126,11 +126,11 @@ function generateCpp(graph: ir.Graph): void {
     const instructionGenVisitor = new CppCodeGenVisitor(names);
     const iterableGraph = new CodeGenIterable(graph);
     for (let vertex of iterableGraph) {
-        const statement = vertex.accept<AstNode | void>(instructionGenVisitor);
+        const statement = vertex.accept(instructionGenVisitor);
         if (!statement) {
             continue;
         }
-        cpp_function.body.statements.push(statement);
+        cpp_function.body.statements.push(...statement);
     }
     if (function_name === 'main') {
         cpp_function.body.statements.pop();
