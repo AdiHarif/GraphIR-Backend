@@ -35,6 +35,21 @@ class GotoStmt extends Stmt {
     }
 }
 
+class IfStmt extends Stmt {
+    constructor(public condition: Expr, public thenStmt: Stmt, public elseStmt?: Stmt) {
+        super();
+    }
+
+    toString(): string {
+        let out = `if (${this.condition.toString()})\n`;
+        out += this.thenStmt.toString() + "\n";
+        if (this.elseStmt) {
+            out += "else\n" + this.elseStmt.toString();
+        }
+        return out;
+    }
+}
+
 class ReturnStmt extends Stmt {
     constructor(public expr?: Expr) {
         super();
@@ -45,4 +60,4 @@ class ReturnStmt extends Stmt {
     }
 }
 
-export { Stmt, BlockStmt, ExprStmt, GotoStmt, ReturnStmt };
+export { Stmt, BlockStmt, ExprStmt, GotoStmt, ReturnStmt, IfStmt };
