@@ -58,7 +58,7 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     }
 
     visitPhiVertex(vertex: ir.PhiVertex): Array<AstNode> {
-        throw new Error('Method not implemented.');
+        return [];
     }
 
     visitStartVertex(vertex: ir.StartVertex): Array<AstNode> {
@@ -74,7 +74,17 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     }
 
     visitBlockEndVertex(vertex: ir.BlockEndVertex): Array<AstNode> {
-        return [new stmt.GotoStmt(this.namesMap.get(vertex.next!)!)];
+        let out: Array<AstNode> = vertex.next!.phiVertices.map(phi => {
+            const value = phi.operands.find(op => op.srcBranch == vertex)!.value;
+            const valueExpr = CppCodeGenVisitor.createAssignmentStatement(
+                this.namesMap.get(phi)!,
+                new expr.IdentifierExpr(this.namesMap.get(value)!)
+            );
+            return new stmt.ExprStmt(valueExpr);
+        });
+
+        out.push(new stmt.GotoStmt(this.namesMap.get(vertex.next!)!));
+        return out;
     }
 
     visitReturnVertex(vertex: ir.ReturnVertex): Array<AstNode> {
@@ -83,7 +93,17 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     }
 
     visitBranchVertex(vertex: ir.BranchVertex): Array<AstNode> {
-        throw new Error('Method not implemented.');
+        let out: Array<AstNode> = [];
+        const condition = new expr.IdentifierExpr(this.namesMap.get(vertex.condition!)!);
+        const thenStmt = new stmt.GotoStmt(this.namesMap.get(vertex.trueNext!)!);
+        if (vertex.falseNext) {
+            const elseStmt = new stmt.GotoStmt(this.namesMap.get(vertex.falseNext)!);
+            out.push(new stmt.IfStmt(condition, thenStmt, elseStmt));
+        }
+        else {
+            out.push(new stmt.IfStmt(condition, thenStmt));
+        }
+        return out;
     }
 
     visitMergeVertex(vertex: ir.MergeVertex): Array<AstNode> {
