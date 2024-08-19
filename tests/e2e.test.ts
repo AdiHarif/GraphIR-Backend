@@ -13,12 +13,10 @@ function compileAndRunFile(tsFile: string) {
     execSync(`npm start -- -i ../../${tsFile} -o ../../out -f csv`, { cwd: "submodules/TS-Graph-Extractor" });
     execSync(`souffle -D../../out -F../../out post_processing.dl`, { cwd: "submodules/GraphIR-Static-Analysis" });
 
-    const llvmIrFile = `out/${path.basename(tsFile, '.ts')}.ll`;
-    execSync(`npm start -- -i ${tsFile} -o ${llvmIrFile} -t out/full_type.csv --instantiate-libs`);
+    const cppFile = `out/${path.basename(tsFile, '.ts')}.cpp`;
+    execSync(`npm start -- -i ${tsFile} -o ${cppFile} -f cpp -t out/full_type.csv`);
 
-    execSync(`llvm-link -S out/*.ll lib/*.ll -o out/linked.ll`);
-    execSync(`llc -filetype=obj out/linked.ll -o out/main.o`);
-    execSync(`clang++ out/main.o -o out/main`);
+    execSync(`clang++ -o out/main -Ilib ${cppFile}`);
 
     const output = execSync(`out/main`).toString();
     const expectedOutput = execSync(`npx tsx ${tsFile}`).toString();
