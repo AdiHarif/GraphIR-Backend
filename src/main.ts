@@ -49,7 +49,10 @@ function generateContext(graph: ir.Graph, contextManager: ContextManager): void 
             registerUsedNonPrimitiveTypes(subgraph);
         }
         for (const vertex of graph.vertices) {
-            if (vertex instanceof ir.AllocationVertex) {
+            if (vertex instanceof ir.StaticSymbolVertex) {
+                continue;
+            }
+            if (vertex instanceof ir.DataVertex || vertex instanceof ir.CompoundVertex) {
                 assert(vertex.verifiedType);
                 contextManager.registerType(vertex.verifiedType);
             }
