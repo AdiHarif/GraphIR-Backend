@@ -91,4 +91,20 @@ class FunctionType extends Type {
     }
 }
 
-export { Type, ArrayType, TemplateType, PointerType, IntType, UnsignedIntType, FloatType, BooleanType, StringType, VoidType, FunctionType };
+class AutoType extends Type {
+    toString(): string {
+        return "auto";
+    }
+}
+
+class RefereceType extends Type {
+    constructor(public elementType: Type) {
+        super();
+    }
+
+    toString(): string {
+        return `${this.elementType.toString()}&`;
+    }
+}
+
+export { Type, ArrayType, TemplateType, PointerType, IntType, UnsignedIntType, FloatType, BooleanType, StringType, VoidType, FunctionType, AutoType, RefereceType };
