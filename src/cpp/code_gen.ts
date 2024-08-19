@@ -7,6 +7,7 @@ import * as stmt from './ast/stmt.js';
 import * as expr from './ast/expr.js';
 import { Decl, LabelDecl, ParamDecl, VarDecl } from './ast/decl.js';
 
+import * as libType from './type/lib_types.js';
 import { irTypeToCppType } from './type/type_conversion.js';
 
 type AstNode = stmt.Stmt | Decl;
@@ -86,7 +87,9 @@ class CppCodeGenVisitor implements ir.VertexVisitor<AstNode | void> {
     }
 
     visitAllocationVertex(vertex: ir.AllocationVertex): AstNode {
-        const arrayType = irTypeToCppType(vertex.verifiedType!);
+        const ptrType = irTypeToCppType(vertex.verifiedType!);
+        assert(ptrType instanceof libType.SharedPointerType);
+        const arrayType = ptrType.elementType;
         let initArg;
         if (vertex.args!.length === 1) {
             initArg = new expr.IdentifierExpr(this.namesMap.get(vertex.args![0])!);
@@ -96,7 +99,7 @@ class CppCodeGenVisitor implements ir.VertexVisitor<AstNode | void> {
             initArg = new expr.CastingExpr(arrayType, initArg);
         }
         const init = new expr.TemplateCallExpr('std::make_shared', [initArg], [arrayType]);
-        return new VarDecl(arrayType, this.namesMap.get(vertex)!, init);
+        return new VarDecl(ptrType, this.namesMap.get(vertex)!, init);
     }
 
     visitStoreVertex(vertex: ir.StoreVertex): AstNode {
