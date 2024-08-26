@@ -2,41 +2,26 @@
 #pragma once
 
 #include <string>
+#include <variant>
+
+using Undefined = std::monostate;
 
 class Union {
-    enum Tag {
-        Boolean,
-        Number,
-        String,
-        Undefined
-    } tag;
-    union Value {
-        bool b;
-        double n;
-        std::string s;
-
-        Value() : b(false) {}
-        ~Value() {}
-    } value;
-
-    void constructValue(Tag t);
-    void destructValue();
+    std::variant<std::monostate, double, std::string> value;
 
 public:
-    Union();
-    Union(bool b);
-    Union(double n);
-    Union(const std::string& s);
-    Union(const Union& other);
-    ~Union();
 
-    Union& operator=(bool b);
-    Union& operator=(double n);
-    Union& operator=(const std::string& s);
-    Union& operator=(const Union& other);
+    template <typename T>
+    Union& operator=(const T& arg) {
+        value = arg;
+        return *this;
+    }
+
     operator bool();
     bool operator==(double number) const;
+    bool operator!=(double number) const;
 };
 
-bool operator==(double number, const Union& value);
+bool operator==(double number, const Union& u);
+bool operator!=(double number, const Union& u);
 
