@@ -60,6 +60,9 @@ function typeNameToType(typeName: string): ir.Type {
     else if (typeName.startsWith('Union')) {
         return new ir.UnionType([]);
     }
+    else if (typeName.startsWith('Undefined')) {
+        return new ir.UndefinedType();
+    }
     throw new Error(`Unsupported typename: ${typeName}`);
 }
 

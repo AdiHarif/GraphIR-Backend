@@ -16,6 +16,10 @@ class TypeConversionVisitor implements ir.TypeVisitor<cppType.Type> {
         throw new Error('Unknown types are not yet supported.');
     }
 
+    visitUndefinedType(type: ir.UndefinedType): cppType.Type {
+        return new cppCustomType.UndefinedType();
+    }
+
     visitNumberType(type: ir.NumberType): cppType.Type {
         return new cppType.FloatType(64);
     }

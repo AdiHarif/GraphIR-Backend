@@ -6,3 +6,9 @@ export class UnionType extends Type {
         return "Union";
     }
 }
+
+export class UndefinedType extends Type {
+    toString(): string {
+        return "Undefined";
+    }
+}

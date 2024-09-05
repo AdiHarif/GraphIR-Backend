@@ -22,6 +22,10 @@ class TypeConversionVisitor implements ir.TypeVisitor<LlvmType> {
         throw new Error('Unknown types are not yet supported.');
     }
 
+    visitUndefinedType(type: ir.UndefinedType): LlvmType {
+        throw new Error('Undefined types are not yet supported.');
+    }
+
     visitNumberType(type: ir.NumberType): LlvmType {
         return new LlvmIntegerType(64);
     }
