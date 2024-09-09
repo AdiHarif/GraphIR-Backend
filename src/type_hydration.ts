@@ -10,6 +10,26 @@ function extractInnerTypeName(typeName: string): string {
     return typeName.slice(start, end);
 }
 
+function splitTypeNamesList(typeNames: string): Array<string> {
+    const typeNamesList = [];
+    let start = 0;
+    let depth = 0;
+    for (let i = 0; i < typeNames.length; i++) {
+        if (typeNames[i] == '<') {
+            depth++;
+        }
+        else if (typeNames[i] == '>') {
+            depth--;
+        }
+        else if (typeNames[i] == ',' && depth == 0) {
+            typeNamesList.push(typeNames.slice(start, i));
+            start = i + 1;
+        }
+    }
+    typeNamesList.push(typeNames.slice(start));
+    return typeNamesList;
+}
+
 function typeNameToType(typeName: string): ir.Type {
     if (typeName == 'Number') {
         return new ir.NumberType();
@@ -35,7 +55,7 @@ function typeNameToType(typeName: string): ir.Type {
         const arrowIndex = typeName.indexOf('->');
         const returnTypeName = typeName.slice(arrowIndex + 2);
         const returnType = typeNameToType(returnTypeName);
-        const argTypeNames = typeName.slice(1, arrowIndex - 1).split(',');
+        const argTypeNames = splitTypeNamesList(typeName.slice(1, arrowIndex - 1));
         let argTypes: ir.Type[];
         if (argTypeNames.length == 1 && argTypeNames[0] == '') {
             argTypes = [];
@@ -47,7 +67,7 @@ function typeNameToType(typeName: string): ir.Type {
     }
     else if (typeName.startsWith('StaticArray')) {
         const innerTypeNameWithLength = extractInnerTypeName(typeName);
-        const [innerTypeName, lengthString]  = innerTypeNameWithLength.split(',');
+        const [innerTypeName, lengthString]  = splitTypeNamesList(innerTypeNameWithLength);
         return new ir.StaticArrayType(typeNameToType(innerTypeName), parseInt(lengthString));
     }
     else if (typeName.startsWith('DynamicArray')) {
@@ -58,7 +78,7 @@ function typeNameToType(typeName: string): ir.Type {
         return new ir.StaticStringType(0);
     }
     else if (typeName.startsWith('Union')) {
-        const unionOptions = extractInnerTypeName(typeName).split(',')
+        const unionOptions = splitTypeNamesList(extractInnerTypeName(typeName))
             .map(name => typeNameToType(name));
         return new ir.UnionType(unionOptions)
     }
