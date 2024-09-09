@@ -7,9 +7,37 @@
 using Undefined = std::monostate;
 
 
+// void operator*(Undefined) {
+//     throw std::bad_variant_access();
+// }
+
 template <typename... Types>
 class Union {
     std::variant<Undefined, Types...> value;
+
+    // template <typename T>
+    // struct is_shared_ptr : std::false_type {};
+
+    // template <typename T>
+    // struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
+
+    // template <typename T>
+    // struct tmp;
+
+    // template <typename T>
+    // struct tmp<std::shared_ptr<std::vector<T>>> {
+    //     using type = T;
+    // };
+
+
+    // template <typename T>
+    // struct element<typename T> {
+    //     using type = tmp<T>::type;
+    // }
+
+
+    // using elementType = element<Types>::type;
+
 
 public:
 
@@ -49,6 +77,16 @@ public:
     bool operator!=(double number) const {
         return !(*this == number);
     }
+
+    // elementType operator*() {
+    //     return std::visit([this](auto& arg) {
+    //         using T = std::decay_t<decltype(arg)>;
+    //         if constexpr (is_shared_ptr<T>::value) {
+    //             return *std::get<T>(this->value);
+    //         }
+    //         throw std::bad_variant_access();
+    //     }, value);
+    // }
 };
 
 
