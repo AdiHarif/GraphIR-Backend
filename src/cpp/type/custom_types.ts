@@ -1,9 +1,9 @@
 
-import { Type } from './type.js';
+import { TemplateType, Type } from './type.js';
 
-export class UnionType extends Type {
-    toString(): string {
-        return "Union";
+export class UnionType extends TemplateType {
+    constructor(public types: Array<Type>) {
+        super('Union', types);
     }
 }
 

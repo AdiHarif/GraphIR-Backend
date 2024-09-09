@@ -65,7 +65,8 @@ class TypeConversionVisitor implements ir.TypeVisitor<cppType.Type> {
     }
 
     visitUnionType(type: ir.UnionType): cppType.Type {
-        return new cppCustomType.UnionType();
+        const templateArgs = type.types.map(irTypeToCppType)
+        return new cppCustomType.UnionType(templateArgs);
     }
 }
 

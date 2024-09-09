@@ -58,7 +58,9 @@ function typeNameToType(typeName: string): ir.Type {
         return new ir.StaticStringType(0);
     }
     else if (typeName.startsWith('Union')) {
-        return new ir.UnionType([]);
+        const unionOptions = extractInnerTypeName(typeName).split(',')
+            .map(name => typeNameToType(name));
+        return new ir.UnionType(unionOptions)
     }
     else if (typeName.startsWith('Undefined')) {
         return new ir.UndefinedType();

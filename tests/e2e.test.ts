@@ -16,7 +16,7 @@ function compileAndRunFile(tsFile: string) {
     const cppFile = `out/${path.basename(tsFile, '.ts')}.cpp`;
     execSync(`npm start -- -i ${tsFile} -o ${cppFile} -f cpp -t out/full_type.csv`);
 
-    execSync(`clang++ -o out/main -Ilib ${cppFile} lib/*.cpp`);
+    execSync(`clang++ -o out/main -Ilib ${cppFile}`);
 
     const output = execSync(`out/main`).toString();
     const expectedOutput = execSync(`npx tsx ${tsFile}`).toString();
