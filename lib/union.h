@@ -3,6 +3,7 @@
 
 #include <string>
 #include <variant>
+#include <ostream>
 
 using Undefined = std::monostate;
 
@@ -182,6 +183,9 @@ public:
 
     template <typename... Types1, typename... Types2>
     friend bool operator==(const Union<Types1...>& u1, const Union<Types2...>& u2);
+
+    template <typename... Types1>
+    friend std::ostream& operator<<(std::ostream& os, const Union<Types1...>& u);
 };
 
 
@@ -236,4 +240,15 @@ bool operator==(const Union<Types1...>& u1, const Union<Types2...>& u2) {
 template <typename... Types1, typename... Types2>
 bool operator!=(const Union<Types1...>& u1, const Union<Types2...>& u2) {
     return !(u1 == u2);
+}
+
+std::ostream& operator<<(std::ostream& os, const Undefined&) {
+    return os << "undefined";
+}
+
+template <typename... Types>
+std::ostream& operator<<(std::ostream& os, const Union<Types...>& u) {
+    return std::visit([&os](const auto& arg) -> std::ostream& {
+        return os << arg;
+    }, u.value);
 }
