@@ -158,25 +158,6 @@ public:
         }, value);
     }
 
-    bool operator==(double number) const {
-        return std::visit([number](const auto& arg) {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, Undefined>) {
-                return false;
-            }
-            else if constexpr (std::is_same_v<T, std::string>) {
-                return arg == std::to_string(number);
-            }
-            else {
-                return arg == number;
-            }
-        }, value);
-    }
-
-    bool operator!=(double number) const {
-        return !(*this == number);
-    }
-
     using ReferencedType = GetReferencedTypes<Union<Types...>>;
     ReferencedType operator*() {
         return std::visit([this](auto& arg) -> ReferencedType {
@@ -198,16 +179,61 @@ public:
             throw std::bad_variant_access();
         }, value);
     }
+
+    template <typename... Types1, typename... Types2>
+    friend bool operator==(const Union<Types1...>& u1, const Union<Types2...>& u2);
 };
 
 
-template <typename... Types>
-bool operator==(double number, const Union<Types...>& u) {
-    return u == number;
+template <typename... Types, typename T>
+bool operator==(const T& val, const Union<Types...>& u) {
+    return u == Union<T>(val);
+}
+
+template <typename... Types, typename T>
+bool operator==(const Union<Types...>& u, const T& val) {
+    return u == Union<T>(val);
+}
+
+template <typename... Types, typename T>
+bool operator!=(const T& val, const Union<Types...>& u) {
+    return u != Union<T>(val);
+}
+
+template <typename... Types, typename T>
+bool operator!=(const Union<Types...>& u, const T& val) {
+    return u != Union<T>(val);
 }
 
 
-template <typename... Types>
-bool operator!=(double number, const Union<Types...>& u) {
-    return u != number;
+template <typename T>
+bool operator==(const Undefined&, const T&) {
+    return false;
+}
+
+template <typename T>
+bool operator==(const T&, const Undefined&) {
+    return false;
+}
+
+bool operator==(double n, const std::string& s) {
+    return s == std::to_string(n);
+}
+
+bool operator==(const std::string& s, double n) {
+    return n == s;
+}
+
+template <typename... Types1, typename... Types2>
+bool operator==(const Union<Types1...>& u1, const Union<Types2...>& u2) {
+    return std::visit([&u2](const auto& arg) {
+        return std::visit([&arg](const auto& otherArg) {
+            return arg == otherArg;
+        }, u2.value);
+    }, u1.value);
+}
+
+template <typename... Types1, typename... Types2>
+bool operator!=(const Union<Types1...>& u1, const Union<Types2...>& u2) {
+    return !(u1 == u2);
 }
