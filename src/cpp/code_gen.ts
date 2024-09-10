@@ -131,7 +131,7 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     }
 
     visitStoreVertex(vertex: ir.StoreVertex): Array<AstNode> {
-        assert(vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType! instanceof ir.DynamicArrayType);
+        assert(vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType);
         const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
         const left = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
         const right = new expr.IdentifierExpr(this.namesMap.get(vertex.value!)!);
@@ -141,7 +141,7 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     visitLoadVertex(vertex: ir.LoadVertex): Array<AstNode> {
         let right: expr.Expr;
         const name = this.namesMap.get(vertex)!;
-        if (vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType! instanceof ir.DynamicArrayType) {
+        if (vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType) {
             const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
             right = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
         }
