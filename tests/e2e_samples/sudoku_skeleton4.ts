@@ -120,7 +120,7 @@ function _main() {
 		return;
 	}
 	console.log("Verification failed");
-	console.log(board);
+	// console.log(board);
 }
 
 _main();
