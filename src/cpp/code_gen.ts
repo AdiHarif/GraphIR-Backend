@@ -10,6 +10,7 @@ import { Decl, LabelDecl, ParamDecl, VarDecl } from './ast/decl.js';
 import * as type from './type/type.js';
 import * as libType from './type/lib_types.js';
 import { irTypeToCppType } from './type/type_conversion.js';
+import * as customTypes from './type/custom_types.js';
 
 type AstNode = stmt.Stmt | Decl;
 
@@ -114,26 +115,29 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     }
 
     visitAllocationVertex(vertex: ir.AllocationVertex): Array<AstNode> {
-        const ptrType = irTypeToCppType(vertex.verifiedType!);
-        assert(ptrType instanceof libType.SharedPointerType);
-        const arrayType = ptrType.elementType;
+        const objType = irTypeToCppType(vertex.verifiedType!);
+        assert(objType instanceof customTypes.DynamicArrayType);
         let initArg;
         if (vertex.args!.length === 1) {
             initArg = new expr.IdentifierExpr(this.namesMap.get(vertex.args![0])!);
         }
         else {
             initArg = new expr.StructLiteralExpr(vertex.args!.map(arg => new expr.IdentifierExpr(this.namesMap.get(arg)!)));
-            initArg = new expr.CastingExpr(arrayType, initArg);
         }
-        const init = new expr.TemplateCallExpr('std::make_shared', [initArg], [arrayType]);
+        const init = new expr.CallExpr(objType.toString(), [initArg]);
         const name = this.namesMap.get(vertex)!;
         return [CppCodeGenVisitor.createAssignmentStatement(name, init)];
     }
 
     visitStoreVertex(vertex: ir.StoreVertex): Array<AstNode> {
-        assert(vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType);
-        const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
-        const left = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
+        // assert(vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType);
+        // const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
+        // const left = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
+        // const right = new expr.IdentifierExpr(this.namesMap.get(vertex.value!)!);
+        // return [new stmt.ExprStmt(new expr.BinaryOperationExpr('=', left, right))];
+
+        assert(vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType);
+        const left = new expr.SubscriptExpr(new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!), new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
         const right = new expr.IdentifierExpr(this.namesMap.get(vertex.value!)!);
         return [new stmt.ExprStmt(new expr.BinaryOperationExpr('=', left, right))];
     }
@@ -141,9 +145,12 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     visitLoadVertex(vertex: ir.LoadVertex): Array<AstNode> {
         let right: expr.Expr;
         const name = this.namesMap.get(vertex)!;
-        if (vertex.object!.verifiedType instanceof ir.StaticArrayType || vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType) {
+        if (vertex.object!.verifiedType instanceof ir.StaticArrayType) {
             const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
             right = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
+        }
+        else if (vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType) {
+            right = new expr.SubscriptExpr(new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!), new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
         }
         else {
             right = new expr.IdentifierExpr(`_${this.namesMap.get(vertex.object!)!}._${this.namesMap.get(vertex.property!)!}`);

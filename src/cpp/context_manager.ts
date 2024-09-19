@@ -19,7 +19,7 @@ class CppContextManager extends ContextManager {
             this.stdLibIncludes.add("memory");
         }
         if (type instanceof ir.DynamicArrayType) {
-            this.stdLibIncludes.add("vector");
+            this.externalIncludes.add("DynamicArray");
         }
         if (type instanceof ir.FunctionType) {
             this.stdLibIncludes.add("functional");

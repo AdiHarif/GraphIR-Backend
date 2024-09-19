@@ -60,8 +60,8 @@ class TypeConversionVisitor implements ir.TypeVisitor<cppType.Type> {
     }
 
     visitDynamicArrayType(type: ir.DynamicArrayType): cppType.Type {
-        const vectorType = new cppLibType.VectorType(type.elementType.accept(this));
-        return new cppLibType.SharedPointerType(vectorType);
+        const elementType = type.elementType.accept(this);
+        return new cppCustomType.DynamicArrayType(elementType);
     }
 
     visitUnionType(type: ir.UnionType): cppType.Type {

@@ -12,3 +12,9 @@ export class UndefinedType extends Type {
         return "Undefined";
     }
 }
+
+export class DynamicArrayType extends TemplateType {
+    constructor(public elementType: Type) {
+        super('DynamicArray', [elementType]);
+    }
+}
