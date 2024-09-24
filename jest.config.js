@@ -4,5 +4,5 @@ export default {
   transform: {
     "^.+.tsx?$": ["ts-jest",{}],
   },
-  testPathIgnorePatterns: ["/node_modules/", "/submodules/"],
+  testPathIgnorePatterns: ["/node_modules/", "/submodules/TS-Graph-Extractor/"],
 };
