@@ -2,7 +2,8 @@
   "name": "graphir-compiler",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "build/module_exports.js",
+  "types": "build/dts/module_exports.d.ts",
   "type": "module",
   "scripts": {
     "preinstall": "git submodule update --init --recursive && pushd submodules/TS-Graph-Extractor && npm install && npm run build && popd && pushd submodules/GraphIR-Static-Analysis && make functors",

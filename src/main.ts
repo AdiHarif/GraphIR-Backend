@@ -66,7 +66,7 @@ function generateContext(graph: ir.Graph, contextManager: ContextManager): void 
 }
 
 
-function generateCpp(graph: ir.Graph): string {
+export function generateCpp(graph: ir.Graph): string {
     let out = '';
     for (const subgraph of graph.subgraphs) {
         out += generateCpp(subgraph);
