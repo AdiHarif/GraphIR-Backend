@@ -1,17 +1,10 @@
 
-import fs from 'fs';
 import assert from 'assert';
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
-
 import * as ir from 'graphir'
-import { extractFromPath } from 'ts-graph-extractor'
 
 import { CodeGenIterable } from './codegen_iterable.js';
-import { hydrateTypesFromFiles } from './type_hydration.js';
 
 import { ContextManager } from './context_manager.js';
-import { CppContextManager } from './cpp/context_manager.js';
 import { irTypeToCppType } from './cpp/type/type_conversion.js';
 
 import * as cppType from './cpp/type/type.js';
@@ -21,17 +14,8 @@ import * as expr from './cpp/ast/expr.js';
 import { CppCodeGenVisitor, AstNode } from './cpp/code_gen.js';
 import { allocateCppNames } from './cpp/names_allocator.js';
 
-function parseCliArgs() {
-    return yargs(hideBin(process.argv))
-        .option('input-file', { alias: 'i', type: 'string', description: 'Input file', demandOption: true })
-        .option('out-file', { alias: 'o', type: 'string', description: 'Output file'})
-        .option('types-file', { alias: 't', type: 'string', description: 'Types file', demandOption: true})
-        .parseSync();
-}
 
-const args = parseCliArgs();
-
-function generateContext(graph: ir.Graph, contextManager: ContextManager): void {
+export function generateContext(graph: ir.Graph, contextManager: ContextManager): void {
     function registerUsedNonPrimitiveTypes(graph: ir.Graph): void {
         const usedTypes = new Array<ir.Type>();
         for (const subgraph of graph.subgraphs) {
@@ -62,7 +46,6 @@ function generateContext(graph: ir.Graph, contextManager: ContextManager): void 
 
     registerUsedNonPrimitiveTypes(graph);
     registerStaticStrings(graph);
-    contextManager.dump(args['out-file'])
 }
 
 
@@ -126,24 +109,3 @@ export function generateCpp(graph: ir.Graph): string {
     out += cpp_function.toString() + '\n';
     return out;
 }
-
-function main() {
-    const graph = extractFromPath(args['input-file']);
-    hydrateTypesFromFiles(graph, args['types-file']);
-    if (args['out-file']) {
-        fs.writeFileSync(args['out-file'], '');
-    }
-
-    const contextManager = new CppContextManager();
-    generateContext(graph, contextManager);
-
-    const code = generateCpp(graph);
-    if (!args['out-file']) {
-        console.log(code);
-    }
-    else {
-        fs.appendFileSync(args['out-file'], code);
-    }
-}
-
-main();
