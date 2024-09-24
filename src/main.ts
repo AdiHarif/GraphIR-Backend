@@ -66,9 +66,10 @@ function generateContext(graph: ir.Graph, contextManager: ContextManager): void 
 }
 
 
-function generateCpp(graph: ir.Graph): void {
+function generateCpp(graph: ir.Graph): string {
+    let out = '';
     for (const subgraph of graph.subgraphs) {
-        generateCpp(subgraph);
+        out += generateCpp(subgraph);
     }
     let function_name;
     if (graph.getStartVertex().inEdges.length > 0) {
@@ -121,12 +122,9 @@ function generateCpp(graph: ir.Graph): void {
         cpp_function.body.statements.pop();
         cpp_function.body.statements.push(new stmt.ReturnStmt(new expr.LiteralExpr(0)));
     }
-    if (!args['out-file']) {
-        console.log(cpp_function.toString());
-    }
-    else {
-        fs.appendFileSync(args['out-file'], cpp_function.toString() + '\n');
-    }
+
+    out += cpp_function.toString() + '\n';
+    return out;
 }
 
 function main() {
@@ -139,7 +137,13 @@ function main() {
     const contextManager = new CppContextManager();
     generateContext(graph, contextManager);
 
-    generateCpp(graph);
+    const code = generateCpp(graph);
+    if (!args['out-file']) {
+        console.log(code);
+    }
+    else {
+        fs.appendFileSync(args['out-file'], code);
+    }
 }
 
 main();
