@@ -3,8 +3,6 @@ import assert from 'assert';
 import * as ir from 'graphir'
 
 import { CodeGenIterable } from './codegen_iterable.js';
-
-import { ContextManager } from './context_manager.js';
 import { irTypeToCppType } from './cpp/type/type_conversion.js';
 
 import * as cppType from './cpp/type/type.js';
@@ -13,40 +11,6 @@ import * as stmt from './cpp/ast/stmt.js';
 import * as expr from './cpp/ast/expr.js';
 import { CppCodeGenVisitor, AstNode } from './cpp/code_gen.js';
 import { allocateCppNames } from './cpp/names_allocator.js';
-
-
-export function generateContext(graph: ir.Graph, contextManager: ContextManager): void {
-    function registerUsedNonPrimitiveTypes(graph: ir.Graph): void {
-        const usedTypes = new Array<ir.Type>();
-        for (const subgraph of graph.subgraphs) {
-            registerUsedNonPrimitiveTypes(subgraph);
-        }
-        for (const vertex of graph.vertices) {
-            if (vertex instanceof ir.StaticSymbolVertex) {
-                contextManager.registerSymbol(vertex);
-                continue;
-            }
-            if (vertex instanceof ir.DataVertex || vertex instanceof ir.CompoundVertex) {
-                assert(vertex.verifiedType);
-                contextManager.registerType(vertex.verifiedType);
-            }
-        }
-    }
-
-    function registerStaticStrings(graph: ir.Graph): void {
-        for (const subgraph of graph.subgraphs) {
-            registerStaticStrings(subgraph);
-        }
-        for (const vertex of graph.vertices) {
-            if (vertex instanceof ir.LiteralVertex && typeof vertex.value === 'string') {
-                contextManager.registerStaticString(vertex.id, vertex.value);
-            }
-        }
-    }
-
-    registerUsedNonPrimitiveTypes(graph);
-    registerStaticStrings(graph);
-}
 
 
 export function generateCpp(graph: ir.Graph): string {
