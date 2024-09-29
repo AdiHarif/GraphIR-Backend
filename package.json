@@ -11,7 +11,7 @@
     "build:watch": "tsc -w",
     "start": "node build/main.js",
     "test": "jest",
-    "prepare": "npm run build"
+    "prepare": "git submodule update --init --recursive && pushd submodules/GraphIR-Static-Analysis && make functors && npm run build"
   },
   "directories": {
     "test": "tests"
