@@ -22,7 +22,7 @@
     "@types/node": "^20.5.9"
   },
   "dependencies": {
-    "ts-graph-extractor": "file:submodules/TS-Graph-Extractor",
+    "graphir": "github:AdiHarif/GraphIR#dev",
     "yargs": "^17.7.2"
   }
 }
