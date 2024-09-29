@@ -6,7 +6,7 @@
   "types": "build/dts/module_exports.d.ts",
   "type": "module",
   "scripts": {
-    "preinstall": "pushd submodules/GraphIR-Static-Analysis && make functors",
+    "preinstall": "git submodule update --init --recursive && pushd submodules/GraphIR-Static-Analysis && make functors",
     "build": "tsc",
     "build:watch": "tsc -w",
     "start": "node build/main.js",
