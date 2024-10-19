@@ -38,7 +38,7 @@ class FuncDecl extends Decl {
     }
 
     toString(): string {
-        let out = `${this.returnType.toString()} ${this.name}(`;
+        let out = `extern "C" ${this.returnType.toString()} ${this.name}(`;
         out += this.parameters.map(p => p.toString()).join(", ");
         out += ") ";
         out += this.body.toString();
