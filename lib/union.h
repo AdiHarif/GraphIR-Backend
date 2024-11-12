@@ -76,6 +76,9 @@ public:
             if constexpr (std::is_same_v<T, double>) {
                 return arg;
             }
+            else if constexpr (std::is_same_v<T, int64_t>) {
+                return static_cast<double>(arg);
+            }
             else {
                 throw std::bad_variant_access();
             }
