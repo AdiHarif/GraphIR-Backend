@@ -12,8 +12,13 @@ import * as expr from './cpp/ast/expr.js';
 import { CppCodeGenVisitor, AstNode } from './cpp/code_gen.js';
 import { allocateCppNames } from './cpp/names_allocator.js';
 
+import { BackendConfig } from './config.js';
 
-export function generateCpp(graph: ir.Graph): string {
+export function generateCpp(graph: ir.Graph, config?: BackendConfig): string {
+    if (!config) {
+        config = new BackendConfig();
+    }
+
     let out = '';
     for (const subgraph of graph.subgraphs) {
         out += generateCpp(subgraph);
