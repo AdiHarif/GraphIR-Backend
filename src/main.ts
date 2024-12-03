@@ -44,13 +44,11 @@ export function generateCpp(graph: ir.Graph): string {
         .map(v => {
             assert(v instanceof ir.LoadVertex);
             let type;
-            if (v.verifiedType instanceof ir.StaticArrayType || v.verifiedType instanceof ir.DynamicArrayType) {
-                type = irTypeToCppType(v.verifiedType!);
+            if (v.object instanceof ir.StaticSymbolVertex && v.property instanceof ir.StaticSymbolVertex) {
+                type = new cppType.ScopedType(v.object.name, v.property.name);
             }
             else {
-                assert(v instanceof ir.LoadVertex);
-                assert(v.object instanceof ir.StaticSymbolVertex && v.property instanceof ir.StaticSymbolVertex);
-                type = new cppType.ScopedType(v.object.name, v.property.name);
+                type = irTypeToCppType(v.verifiedType!);
             }
             return new decl.VarDecl(type, names.get(v)!);
         });
