@@ -29,6 +29,11 @@ class Union {
         using t = T;
     };
 
+    template<typename... Ts>
+    struct _GetElementTypes<std::string, Ts...> {
+        using t = std::string;
+    };
+
     template<>
     struct _GetElementTypes<> {
         using t = Undefined;
@@ -89,7 +94,7 @@ public:
     ElementType& operator[](size_t index) {
         return std::visit([index](auto& arg) -> ElementType& {
             using T = std::decay_t<decltype(arg)>;
-            if constexpr (IsDynamicArray<T>::value) {
+            if constexpr (IsDynamicArray<T>::value || std::is_same_v<T, std::string>) {
                 return arg[index];
             }
             throw std::bad_variant_access();
