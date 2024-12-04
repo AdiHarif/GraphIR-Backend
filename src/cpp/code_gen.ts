@@ -152,6 +152,23 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
         else if (vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType) {
             right = new expr.SubscriptExpr(new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!), new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
         }
+        else if (vertex.object instanceof ir.StaticSymbolVertex && vertex.property instanceof ir.StaticSymbolVertex) {
+            right = new expr.IdentifierExpr(`_${this.namesMap.get(vertex.object!)!}._${this.namesMap.get(vertex.property!)!}`);
+        }
+        else if (vertex.verifiedType instanceof ir.FunctionType) {
+            assert(vertex.property instanceof ir.StaticSymbolVertex);
+            const argPlaceholders = vertex.verifiedType.parameterTypes.map((_, i) =>
+                new expr.ScopedIdentifierExpr("std::placeholders", `_${i + 1}`));
+
+            right = new expr.CallExpr(
+                "std::bind",
+                [
+                    new expr.PrefixUnaryOperationExpr('&', new expr.ScopedIdentifierExpr(irTypeToCppType(vertex.object!.verifiedType!).toString(), vertex.property!.name)),
+                    new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!),
+                    ...argPlaceholders
+                ]
+            );
+        }
         else {
             right = new expr.IdentifierExpr(`_${this.namesMap.get(vertex.object!)!}._${this.namesMap.get(vertex.property!)!}`);
         }
