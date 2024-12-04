@@ -29,6 +29,16 @@ class IdentifierExpr extends Expr {
     }
 }
 
+class ScopedIdentifierExpr extends IdentifierExpr {
+    constructor(public scope: string, public name: string) {
+        super(`${name}`);
+    }
+
+    toString(): string {
+        return `${this.scope}::${this.name}`;
+    }
+}
+
 class PrefixUnaryOperationExpr extends Expr {
     constructor(public op: string, public operand: Expr) {
         super();
@@ -129,4 +139,4 @@ class SubscriptExpr extends Expr {
     }
 }
 
-export { Expr, LiteralExpr, PrefixUnaryOperationExpr, PostfixUnaryOperationExpr, BinaryOperationExpr, NewArrayExpr, IdentifierExpr, CallExpr, TemplateCallExpr, StructLiteralExpr, CastingExpr, ParenthesizedExpr, SubscriptExpr };
+export { Expr, LiteralExpr, PrefixUnaryOperationExpr, PostfixUnaryOperationExpr, BinaryOperationExpr, NewArrayExpr, IdentifierExpr, ScopedIdentifierExpr, CallExpr, TemplateCallExpr, StructLiteralExpr, CastingExpr, ParenthesizedExpr, SubscriptExpr };
