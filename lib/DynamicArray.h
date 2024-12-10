@@ -16,5 +16,9 @@ public:
     T& operator[](size_t i) {
         return data->at(i);
     }
+
+    size_t size() const {
+        return data->size();
+    }
 };
 
