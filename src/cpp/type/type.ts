@@ -51,6 +51,12 @@ class StringType extends Type {
     }
 }
 
+class CharType extends Type {
+    toString(): string {
+        return "char";
+    }
+}
+
 class TemplateType extends Type {
     constructor(public name: string, public parameters: Array<Type>) {
         super();
@@ -117,4 +123,4 @@ class ScopedType extends Type {
     }
 }
 
-export { Type, ArrayType, TemplateType, PointerType, IntType, UnsignedIntType, FloatType, BooleanType, StringType, VoidType, FunctionType, AutoType, RefereceType, ScopedType };
+export { Type, ArrayType, TemplateType, PointerType, IntType, UnsignedIntType, FloatType, BooleanType, StringType, CharType, VoidType, FunctionType, AutoType, RefereceType, ScopedType };
