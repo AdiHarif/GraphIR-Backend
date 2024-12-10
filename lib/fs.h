@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include <cassert>
 
@@ -12,10 +13,10 @@ public:
     public:
         std::string operator()(const std::string& s, const std::string& encoding) {
             assert(encoding == "utf8");
+            std::stringstream outStream;
             std::ifstream file(s);
-            std::string out;
-            file >> out;
-            return out;
+            outStream << file.rdbuf();
+            return outStream.str();
         }
     } _readFileSync;
 } _fs;
