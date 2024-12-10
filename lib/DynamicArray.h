@@ -20,5 +20,12 @@ public:
     size_t size() const {
         return data->size();
     }
+
+    DynamicArray<T> slice(size_t start) {
+        DynamicArray<T> result;
+        result.data = data;
+        result.data->erase(result.data->begin(), result.data->begin() + start);
+        return result;
+    }
 };
 
