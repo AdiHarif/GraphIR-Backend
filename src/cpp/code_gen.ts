@@ -149,7 +149,7 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
             const derefExpr = new expr.PrefixUnaryOperationExpr('*', new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!));
             right = new expr.SubscriptExpr(derefExpr, new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
         }
-        else if (vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType) {
+        else if ((vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType) && ! (vertex.property instanceof ir.StaticSymbolVertex)) {
             right = new expr.SubscriptExpr(new expr.IdentifierExpr(this.namesMap.get(vertex.object!)!), new expr.IdentifierExpr(this.namesMap.get(vertex.property!)!));
         }
         else if (vertex.object instanceof ir.StaticSymbolVertex && vertex.property instanceof ir.StaticSymbolVertex) {
