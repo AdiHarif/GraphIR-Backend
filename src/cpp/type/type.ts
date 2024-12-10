@@ -10,12 +10,12 @@ class VoidType extends Type {
 }
 
 class IntType extends Type {
-    constructor(public size: 8 | 16 | 32 | 64) {
+    constructor(public size: 0 | 8 | 16 | 32 | 64 = 0) {
         super();
     }
 
     toString(): string {
-        return `int${this.size}_t`;
+        return this.size == 0 ? 'int' : `int${this.size}_t`;
     }
 }
 

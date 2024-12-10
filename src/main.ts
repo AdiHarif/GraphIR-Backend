@@ -65,7 +65,7 @@ export function generateCpp(graph: ir.Graph): string {
     }
     if (function_name === 'main') {
         cpp_function.parameters = [
-            new decl.ParamDecl(new cppType.IntType(64), 'argc'),
+            new decl.ParamDecl(new cppType.IntType(), 'argc'),
             new decl.ParamDecl(new cppType.PointerType(new cppType.PointerType(new cppType.CharType())), 'argv')
         ];
         cpp_function.body.statements.unshift(
