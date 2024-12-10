@@ -64,6 +64,16 @@ export function generateCpp(graph: ir.Graph): string {
         cpp_function.body.statements.push(...statement);
     }
     if (function_name === 'main') {
+        cpp_function.parameters = [
+            new decl.ParamDecl(new cppType.IntType(64), 'argc'),
+            new decl.ParamDecl(new cppType.PointerType(new cppType.PointerType(new cppType.CharType())), 'argv')
+        ];
+        cpp_function.body.statements.unshift(
+            new stmt.ExprStmt(new expr.CallExpr('process::initializeArgv', [
+                new expr.IdentifierExpr('argc'),
+                new expr.IdentifierExpr('argv')
+            ])),
+        );
         cpp_function.body.statements.pop();
         cpp_function.body.statements.push(new stmt.ReturnStmt(new expr.LiteralExpr(0)));
     }
