@@ -23,8 +23,7 @@ public:
 
     DynamicArray<T> slice(size_t start) {
         DynamicArray<T> result;
-        result.data = data;
-        result.data->erase(result.data->begin(), result.data->begin() + start);
+        result.data = std::make_shared<std::vector<T>>(this->data->begin() + start, this->data->end());
         return result;
     }
 };
