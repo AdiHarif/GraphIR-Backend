@@ -41,7 +41,13 @@ export function generateCpp(graph: ir.Graph, config?: BackendConfig): string {
 
     const variableDeclarations = dataVertices
         .filter(v => !((v as ir.DataVertex).verifiedType! instanceof ir.VoidType) && !((v as ir.DataVertex).verifiedType! instanceof ir.FunctionType))
-        .map(v => new decl.VarDecl(irTypeToCppType((v as ir.DataVertex).verifiedType!), names.get(v)!));
+        .map(v => {
+            let type = irTypeToCppType((v as ir.DataVertex).verifiedType!);
+            if (v instanceof ir.LoadVertex && (v.verifiedType instanceof ir.DynamicArrayType || v.verifiedType instanceof ir.UnionType)) {
+                type = new cppType.PointerType(type);
+            }
+            return new decl.VarDecl(type, names.get(v)!)
+        });
     cpp_function.body.statements.push(...variableDeclarations);
 
     const functorVariableDeclarations = dataVertices
