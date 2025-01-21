@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <sstream>
 
 template <typename T>
 class DynamicArray {
@@ -25,6 +26,17 @@ public:
         DynamicArray<T> result;
         result.data = std::make_shared<std::vector<T>>(this->data->begin() + start, this->data->end());
         return result;
+    }
+
+    std::string join(const std::string& separator) {
+        std::stringstream s;
+        for (size_t i = 0; i < data->size(); i++) {
+            if (i > 0) {
+                s << separator;
+            }
+            s << data->at(i);
+        }
+        return s.str();
     }
 };
 
