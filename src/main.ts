@@ -32,7 +32,7 @@ export function generateCpp(graph: ir.Graph, config?: BackendConfig): string {
     }
     const function_type = (irTypeToCppType(graph.verifiedType!) as cppType.FunctionType);
     const parameters = function_type.parameters.map((t, i) => new decl.ParamDecl(t, `p${i}`));
-    const cpp_function = new decl.FuncDecl(function_type.returnType, function_name, parameters, new stmt.BlockStmt([]));
+    const cpp_function = new decl.FuncDefDecl(function_type.returnType, function_name, parameters, new stmt.BlockStmt([]));
     const names = allocateCppNames(graph);
 
     const dataVertices = [...new CodeGenIterable(graph)]

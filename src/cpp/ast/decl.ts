@@ -32,7 +32,7 @@ class ParamDecl extends Decl {
     }
 }
 
-class FuncDecl extends Decl {
+class FuncDefDecl extends Decl {
     constructor(public returnType: Type, public name: string, public parameters: Array<ParamDecl>, public body: BlockStmt) {
         super();
     }
@@ -56,4 +56,4 @@ class LabelDecl extends Decl {
     }
 }
 
-export { Decl, VarDecl, ParamDecl, FuncDecl, LabelDecl };
+export { Decl, VarDecl, ParamDecl, FuncDefDecl, LabelDecl };
