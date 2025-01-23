@@ -32,6 +32,19 @@ class ParamDecl extends Decl {
     }
 }
 
+class FuncDecl extends Decl {
+    constructor(public returnType: Type, public name: string, public parameterTypes: Array<Type>) {
+        super();
+    }
+
+    toString(): string {
+        let out = `${this.returnType.toString()} ${this.name}(`;
+        out += this.parameterTypes.map(p => p.toString()).join(", ");
+        out += ");";
+        return out;
+    }
+}
+
 class FuncDefDecl extends Decl {
     constructor(public returnType: Type, public name: string, public parameters: Array<ParamDecl>, public body: BlockStmt) {
         super();
@@ -56,4 +69,4 @@ class LabelDecl extends Decl {
     }
 }
 
-export { Decl, VarDecl, ParamDecl, FuncDefDecl, LabelDecl };
+export { Decl, VarDecl, ParamDecl, FuncDecl, FuncDefDecl, LabelDecl };
