@@ -20,6 +20,17 @@ export function generateCpp(graph: ir.Graph, config?: BackendConfig): string {
     }
 
     let out = '';
+
+    for (const subgraph of graph.subgraphs) {
+        const subfunction_type = (irTypeToCppType(subgraph.verifiedType!) as cppType.FunctionType);
+        const subfunction_name = (subgraph.getStartVertex().inEdges[0].source as ir.StaticSymbolVertex).name;
+
+        const subfunction_declaration = new decl.FuncDecl(subfunction_type.returnType, subfunction_name, subfunction_type.parameters);
+        out += subfunction_declaration.toString() + '\n';
+    }
+
+    out += '\n';
+
     for (const subgraph of graph.subgraphs) {
         out += generateCpp(subgraph);
     }
