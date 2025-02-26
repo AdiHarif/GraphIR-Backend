@@ -60,4 +60,14 @@ class ReturnStmt extends Stmt {
     }
 }
 
-export { Stmt, BlockStmt, ExprStmt, GotoStmt, ReturnStmt, IfStmt };
+class ThrowStmt extends Stmt {
+    constructor(public expr: Expr) {
+        super();
+    }
+
+    toString(): string {
+        return `throw ${this.expr.toString()};`;
+    }
+}
+
+export { Stmt, BlockStmt, ExprStmt, GotoStmt, ReturnStmt, ThrowStmt, IfStmt };

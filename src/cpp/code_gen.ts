@@ -109,6 +109,10 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
         return [new stmt.ReturnStmt(valueExpr)];
     }
 
+    visitThrowVertex(vertex: ir.ThrowVertex): Array<AstNode> {
+        return [new stmt.ThrowStmt(this.createValueExpression(vertex.value!))];
+    }
+
     visitBranchVertex(vertex: ir.BranchVertex): Array<AstNode> {
         let out: Array<AstNode> = [];
         const condition = this.createValueExpression(vertex.condition!);
