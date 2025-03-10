@@ -82,8 +82,7 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
             case ir.VertexKind.Parameter:
             case ir.VertexKind.Symbol:
                 break;
-            case ir.VertexKind.PostfixUnaryOperation:
-            case ir.VertexKind.PrefixUnaryOperation:
+            case ir.VertexKind.UnaryOperation:
                 this.verticesStack.push((vertex as ir.UnaryOperationVertex).operand!);
                 break;
             case ir.VertexKind.BinaryOperation:

@@ -48,17 +48,17 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
         return [];
     }
 
-    visitPrefixUnaryOperationVertex(vertex: ir.PrefixUnaryOperationVertex): Array<AstNode> {
+    visitUnaryOperationVertex(vertex: ir.UnaryOperationVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
         const operandValue = this.createValueExpression(vertex.operand!);
-        const exprValue = new expr.PrefixUnaryOperationExpr(vertex.operator, operandValue);
-        return [CppCodeGenVisitor.createOwningAssignmentStatement(name, exprValue)];
-    }
-
-    visitPostfixUnaryOperationVertex(vertex: ir.PostfixUnaryOperationVertex): Array<AstNode> {
-        const name = this.namesMap.get(vertex)!;
-        const operandValue = this.createValueExpression(vertex.operand!);
-        const exprValue = new expr.PostfixUnaryOperationExpr(vertex.operator, operandValue);
+        let exprValue: expr.Expr;
+        if (vertex.operator === '--' || vertex.operator === '++') {
+            const op = vertex.operator === '--' ? '-' : '+';
+            exprValue = new expr.BinaryOperationExpr(op, operandValue, new expr.LiteralExpr(1));
+        }
+        else {
+            exprValue = new expr.PrefixUnaryOperationExpr(vertex.operator, operandValue);
+        }
         return [CppCodeGenVisitor.createOwningAssignmentStatement(name, exprValue)];
     }
 
