@@ -20,6 +20,10 @@ class TypeConversionVisitor implements ir.TypeVisitor<cppType.Type> {
         return new cppCustomType.UndefinedType();
     }
 
+    visitNullType(type: ir.NullType): cppType.Type {
+        return new cppCustomType.NullType();
+    }
+
     visitNumberType(type: ir.NumberType): cppType.Type {
         return new cppType.FloatType(64);
     }
@@ -71,6 +75,10 @@ class TypeConversionVisitor implements ir.TypeVisitor<cppType.Type> {
 
     visitUserDefinedType(type: ir.UserDefinedType): cppType.Type {
         return new cppCustomType.UserDefinedType(type.name);
+    }
+
+    visitObjectType(type: ir.ObjectType): cppType.Type {
+        return new cppCustomType.ObjectType(type.elementType.accept(this));
     }
 }
 

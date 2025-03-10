@@ -36,7 +36,6 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
 
     visitLiteralVertex(vertex: ir.LiteralVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
-        assert(vertex.value !== undefined && vertex.value !== null);
         return [CppCodeGenVisitor.createOwningAssignmentStatement(name, new expr.LiteralExpr(vertex.value))];
     }
 
@@ -133,15 +132,14 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
 
     visitAllocationVertex(vertex: ir.AllocationVertex): Array<AstNode> {
         const objType = irTypeToCppType(vertex.verifiedType!);
-        assert(objType instanceof customTypes.DynamicArrayType);
-        let initArg;
-        if (vertex.args!.length === 1) {
-            initArg = this.createValueExpression(vertex.args![0]);
+        let initArgs;
+        if (objType instanceof customTypes.DynamicArrayType && vertex.args!.length !== 1) {
+            initArgs = [new expr.StructLiteralExpr(vertex.args!.map(arg => this.createValueExpression(arg)!))];
         }
         else {
-            initArg = new expr.StructLiteralExpr(vertex.args!.map(arg => this.createValueExpression(arg)!));
+            initArgs = vertex.args!.map(arg => this.createValueExpression(arg)!);
         }
-        const init = new expr.CallExpr(objType.toString(), [initArg]);
+        const init = new expr.CallExpr(objType.toString(), initArgs);
         const name = this.namesMap.get(vertex)!;
         return [CppCodeGenVisitor.createOwningAssignmentStatement(name, init)];
     }

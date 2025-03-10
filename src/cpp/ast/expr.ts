@@ -6,11 +6,17 @@ abstract class Expr {
 }
 
 class LiteralExpr extends Expr {
-    constructor(public value: string | number | boolean) {
+    constructor(public value: string | number | boolean | null | undefined) {
         super();
     }
 
     toString(): string {
+        if (this.value === null) {
+            return "Null";
+        }
+        if (this.value === undefined) {
+            return "Undefined";
+        }
         let out = this.value.toString();
         if (typeof this.value === "string") {
             out = `"${out}"`;

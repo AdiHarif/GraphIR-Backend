@@ -21,7 +21,7 @@
     "@types/node": "^20.5.9"
   },
   "dependencies": {
-    "graphir": "github:AdiHarif/GraphIR#a60a376",
+    "graphir": "github:AdiHarif/GraphIR#03aa564",
     "yargs": "^17.7.2"
   }
 }

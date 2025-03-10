@@ -17,9 +17,25 @@ export class UserDefinedType extends Type {
     }
 }
 
+export class ObjectType extends Type {
+    constructor(public elementType: Type) {
+        super();
+    }
+
+    toString(): string {
+        return `Object<${this.elementType.toString()}>`;
+    }
+}
+
 export class UndefinedType extends Type {
     toString(): string {
         return "Undefined";
+    }
+}
+
+export class NullType extends Type {
+    toString(): string {
+        return "Null";
     }
 }
 
