@@ -7,7 +7,11 @@
 
 #include "DynamicArray.h"
 
+template <typename T, typename... Ts>
+constexpr bool contains_type_v = std::disjunction_v<std::is_same<T, Ts>...>;
+
 using Undefined = std::monostate;
+using Null = std::monostate;
 
 template <typename... Types>
 class Union {
@@ -60,6 +64,19 @@ public:
     template <typename T>
     Union& operator=(const T& arg) {
         value = arg;
+        return *this;
+    }
+
+    Union& operator=(const double arg) {
+        if constexpr (contains_type_v<double, Types...>) {
+            value = arg;
+        }
+        else if constexpr (contains_type_v<int64_t, Types...>) {
+            value = static_cast<int64_t>(arg);
+        }
+        else {
+            throw std::bad_variant_access();
+        }
         return *this;
     }
 
