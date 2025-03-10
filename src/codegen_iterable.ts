@@ -138,6 +138,11 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                     this.verticesStack.push((vertex as ir.ReturnVertex).value!);
                 }
                 break;
+            case ir.VertexKind.Throw:
+                if ((vertex as ir.ThrowVertex).value != undefined) {
+                    this.verticesStack.push((vertex as ir.ThrowVertex).value!);
+                }
+                break;
             case ir.VertexKind.Call:
                 const call = this.verticesStack.pop() as ir.CallVertex;
                 this.verticesStack.push(call.next!);
