@@ -139,4 +139,14 @@ class SubscriptExpr extends Expr {
     }
 }
 
-export { Expr, LiteralExpr, PrefixUnaryOperationExpr, PostfixUnaryOperationExpr, BinaryOperationExpr, NewArrayExpr, IdentifierExpr, ScopedIdentifierExpr, CallExpr, TemplateCallExpr, StructLiteralExpr, CastingExpr, ParenthesizedExpr, SubscriptExpr };
+class MemberAccessExpr extends Expr {
+    constructor(public object: Expr, public member: string) {
+        super();
+    }
+
+    toString(): string {
+        return `${this.object.toString()}.${this.member}`;
+    }
+}
+
+export { Expr, LiteralExpr, PrefixUnaryOperationExpr, PostfixUnaryOperationExpr, BinaryOperationExpr, NewArrayExpr, IdentifierExpr, ScopedIdentifierExpr, CallExpr, TemplateCallExpr, StructLiteralExpr, CastingExpr, ParenthesizedExpr, SubscriptExpr, MemberAccessExpr };

@@ -153,10 +153,17 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
         // const right = new expr.IdentifierExpr(this.namesMap.get(vertex.value!)!);
         // return [new stmt.ExprStmt(new expr.BinaryOperationExpr('=', left, right))];
 
-        assert(vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType);
-        const objectExpression: expr.Expr = this.createValueExpression(vertex.object!);
-        const left = new expr.SubscriptExpr(objectExpression, this.createValueExpression(vertex.property!));
-        const right = this.createValueExpression(vertex.value!);
+        let left: expr.Expr;
+        let right = this.createValueExpression(vertex.value!);
+        if (vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType) {
+            const objectExpression: expr.Expr = this.createValueExpression(vertex.object!);
+            left = new expr.SubscriptExpr(objectExpression, this.createValueExpression(vertex.property!));
+        }
+        else {
+            assert(vertex.object instanceof ir.StaticSymbolVertex && vertex.object.name === '_globals');
+            assert(vertex.property instanceof ir.StaticSymbolVertex);
+            left = new expr.MemberAccessExpr(new expr.IdentifierExpr('_globals'), vertex.property.name);
+        }
         return [new stmt.ExprStmt(new expr.BinaryOperationExpr('=', left, right))];
     }
 
@@ -176,7 +183,13 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
             }
         }
         else if (vertex.object instanceof ir.StaticSymbolVertex && vertex.property instanceof ir.StaticSymbolVertex) {
-            right = new expr.IdentifierExpr(`_${this.namesMap.get(vertex.object!)!}._${this.namesMap.get(vertex.property!)!}`);
+            if (vertex.object.name === '_globals') {
+                right = new expr.MemberAccessExpr(new expr.IdentifierExpr('_globals'), vertex.property.name);
+            }
+            else {
+                right = new expr.IdentifierExpr(`_${this.namesMap.get(vertex.object!)!}._${this.namesMap.get(vertex.property!)!}`);
+            }
+
             if (vertex.verifiedType instanceof ir.DynamicArrayType || vertex.verifiedType instanceof ir.UnionType) {
                 return [CppCodeGenVisitor.createRefAssignmentStatement(name, right)];
             }

@@ -7,6 +7,16 @@ export class UnionType extends TemplateType {
     }
 }
 
+export class UserDefinedType extends Type {
+    constructor(public name: string) {
+        super();
+    }
+
+    toString(): string {
+        return this.name;
+    }
+}
+
 export class UndefinedType extends Type {
     toString(): string {
         return "Undefined";

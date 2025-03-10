@@ -69,4 +69,17 @@ class LabelDecl extends Decl {
     }
 }
 
-export { Decl, VarDecl, ParamDecl, FuncDecl, FuncDefDecl, LabelDecl };
+class StructDecl extends Decl {
+    constructor(public name: string, public fields: Array<VarDecl>) {
+        super();
+    }
+
+    toString(): string {
+        let out = `struct ${this.name} {\n`;
+        out += this.fields.map(f => `\t${f.toString()}\n`);
+        out += "};";
+        return out;
+    }
+}
+
+export { Decl, VarDecl, ParamDecl, FuncDecl, FuncDefDecl, LabelDecl, StructDecl };
