@@ -12,10 +12,10 @@ class LiteralExpr extends Expr {
 
     toString(): string {
         if (this.value === null) {
-            return "Null";
+            return "Null()";
         }
         if (this.value === undefined) {
-            return "Undefined";
+            return "Undefined()";
         }
         let out = this.value.toString();
         if (typeof this.value === "string") {
