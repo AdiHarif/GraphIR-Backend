@@ -76,7 +76,9 @@ class StructDecl extends Decl {
 
     toString(): string {
         let out = `struct ${this.name} {\n`;
-        out += this.fields.map(f => `\t${f.toString()}\n`);
+        out += this.fields
+            .map(f => `\t${f.toString()}\n`)
+            .join("");
         out += "};";
         return out;
     }
