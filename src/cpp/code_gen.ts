@@ -65,11 +65,23 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
         const name = this.namesMap.get(vertex)!;
         let leftValue: expr.Expr = this.createValueExpression(vertex.left!);
         let rightValue: expr.Expr = this.createValueExpression(vertex.right!);
-        if (vertex.operator == '%') {
-            leftValue = new expr.CastingExpr(new type.IntType(32), leftValue);
-            rightValue = new expr.CastingExpr(new type.IntType(32), rightValue);
+        const integerOperators = ['%', '<<', '>>', '&', '|', '^'];
+        let op = vertex.operator;
+        if (integerOperators.includes(vertex.operator)) {
+            leftValue = new expr.CastingExpr(new type.IntType(64), leftValue);
+            rightValue = new expr.CastingExpr(new type.IntType(64), rightValue);
         }
-        const exprValue = new expr.BinaryOperationExpr(vertex.operator, leftValue, rightValue);
+        else if (vertex.operator === '>>>') {
+            op = '>>';
+            leftValue = new expr.CastingExpr(new type.UnsignedIntType(64), leftValue);
+            rightValue = new expr.CastingExpr(new type.IntType(64), rightValue);
+        }
+        else if (vertex.operator === '===' || vertex.operator === '!==') {
+            const functionName = "_strictEquals";
+            const call = new expr.CallExpr(functionName, [leftValue, rightValue]);
+            return [CppCodeGenVisitor.createOwningAssignmentStatement(name, call)]
+        }
+        const exprValue = new expr.BinaryOperationExpr(op, leftValue, rightValue);
         return [CppCodeGenVisitor.createOwningAssignmentStatement(name, exprValue)];
     }
 
