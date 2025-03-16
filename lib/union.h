@@ -80,7 +80,7 @@ public:
         return *this;
     }
 
-    explicit operator bool() {
+    explicit operator bool() const {
         return std::visit([](const auto& arg) {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, Undefined>) {
@@ -92,7 +92,7 @@ public:
         }, value);
     }
 
-    operator double() {
+    operator double() const {
         return std::visit([](const auto& arg) -> double {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, double>) {
@@ -105,6 +105,10 @@ public:
                 throw std::bad_variant_access();
             }
         }, value);
+    }
+
+    operator std::string() const {
+        return std::to_string(this->value);
     }
 
     using ElementType = GetElementTypes<Types...>;
@@ -164,6 +168,17 @@ bool operator==(double n, const std::string& s) {
 bool operator==(const std::string& s, double n) {
     return n == s;
 }
+
+template <typename... Types>
+auto operator+(const Union<Types...>& u, double n) {
+    return (double)u + n;
+}
+
+template <typename... Types>
+auto operator+(const Union<Types...>& u, int64_t n) {
+    return (double)u + n;
+}
+
 
 template <typename... Types1, typename... Types2>
 bool operator==(const Union<Types1...>& u1, const Union<Types2...>& u2) {
