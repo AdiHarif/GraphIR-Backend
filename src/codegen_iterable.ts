@@ -158,7 +158,9 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
                 this.verticesStack.push(allocation.next!);
                 this.verticesStack.push(allocation);
                 this.verticesStack.push(...allocation.args!);
-                this.verticesStack.push(allocation.callee!);
+                if (allocation.callee) {
+                    this.verticesStack.push(allocation.callee!);
+                }
                 break;
             case ir.VertexKind.Load:
                 const load = this.verticesStack.pop() as ir.LoadVertex;
