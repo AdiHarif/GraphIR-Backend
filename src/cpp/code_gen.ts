@@ -28,7 +28,7 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
     private createValueExpression(v: ir.Vertex) {
         assert(this.namesMap.has(v));
         let e: expr.Expr = new expr.IdentifierExpr(this.namesMap.get(v)!);
-        if (v instanceof ir.LoadVertex && (v.verifiedType instanceof ir.DynamicArrayType || v.verifiedType instanceof ir.UnionType)) {
+        if (v instanceof ir.LoadVertex && (v.verifiedType instanceof ir.DynamicArrayType || (v.verifiedType instanceof ir.UnionType && v.verifiedType.types.some(t => t instanceof ir.DynamicArrayType)))) {
             e = new expr.PrefixUnaryOperationExpr('*', e);
         }
         return e;
@@ -165,7 +165,7 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
 
         let left: expr.Expr;
         let right = this.createValueExpression(vertex.value!);
-        if (vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType) {
+        if (vertex.object!.verifiedType instanceof ir.DynamicArrayType || vertex.object!.verifiedType instanceof ir.UnionType || vertex.object!.verifiedType instanceof ir.ObjectType) {
             const objectExpression: expr.Expr = this.createValueExpression(vertex.object!);
             left = new expr.SubscriptExpr(objectExpression, this.createValueExpression(vertex.property!));
         }
@@ -188,7 +188,7 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
             const objectExpression: expr.Expr = this.createValueExpression(vertex.object!);
             const property = this.createValueExpression(vertex.property!);
             right = new expr.SubscriptExpr(objectExpression, property);
-            if (vertex.verifiedType instanceof ir.DynamicArrayType || vertex.verifiedType instanceof ir.UnionType) {
+            if (vertex.verifiedType instanceof ir.DynamicArrayType || (vertex.verifiedType instanceof ir.UnionType && vertex.verifiedType.types.some(t => t instanceof ir.DynamicArrayType))) {
                 return [CppCodeGenVisitor.createRefAssignmentStatement(name, right)];
             }
         }
@@ -200,7 +200,8 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
                 right = new expr.IdentifierExpr(`_${this.namesMap.get(vertex.object!)!}._${this.namesMap.get(vertex.property!)!}`);
             }
 
-            if (vertex.verifiedType instanceof ir.DynamicArrayType || vertex.verifiedType instanceof ir.UnionType) {
+            if (vertex.verifiedType instanceof ir.DynamicArrayType ||
+                vertex.verifiedType instanceof ir.UnionType && vertex.verifiedType.types.some(t => t instanceof ir.DynamicArrayType)) {
                 return [CppCodeGenVisitor.createRefAssignmentStatement(name, right)];
             }
         }
