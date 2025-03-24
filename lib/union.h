@@ -85,7 +85,7 @@ public:
         return *this;
     }
 
-    Union& operator=(const double arg) {
+    Union& operator=(double arg) {
         if constexpr (contains_type_v<double, Types...>) {
             value = arg;
         }
@@ -110,7 +110,7 @@ public:
         }, value);
     }
 
-    operator double() {
+    operator double() const {
         return std::visit([](const auto& arg) -> double {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, double>) {
