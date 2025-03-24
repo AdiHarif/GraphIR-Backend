@@ -39,7 +39,8 @@ class CodeGenIterator implements Iterator<ir.Vertex> {
         visited.add(vertex);
         const out = [vertex];
         vertex.outEdges
-            .filter(edge => edge.category == ir.EdgeCategory.Data)
+            .filter(edge => edge.category == ir.EdgeCategory.Data && edge.target.category == ir.VertexCategory.Data)
+            .filter(edge => edge.target.kind != ir.VertexKind.Phi)
             .map(edge => edge.target)
             .forEach(vertex => out.push(...this.getDataDependencies(vertex, visited)));
         return out;
