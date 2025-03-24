@@ -107,6 +107,18 @@ public:
         }, value);
     }
 
+    operator std::string() const {
+        return std::visit([](const auto& arg) -> std::string {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, std::string>) {
+                return arg;
+            }
+            else {
+                return std::to_string(arg);
+            }
+        }, value);
+    }
+
     using ElementType = GetElementTypes<Types...>;
     ElementType operator[](size_t index) {
         return std::visit([index](auto& arg) -> ElementType {
