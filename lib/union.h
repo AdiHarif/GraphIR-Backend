@@ -15,7 +15,7 @@ using Null = std::monostate;
 
 template <typename... Types>
 class Union {
-    std::variant<Undefined, Types...> value;
+    std::variant<Types...> value;
 
     template<typename... Ts>
     struct _GetElementTypes;
@@ -56,7 +56,11 @@ class Union {
     struct IsDynamicArray<DynamicArray<T>> : std::true_type {};
 
 public:
-    Union() : value() {}
+    Union() : value() {
+        if constexpr (contains_type_v<Undefined, Types...>) {
+            value = Undefined();
+        }
+    }
 
     template <typename T>
     Union(const T& arg) : value(arg) {}
