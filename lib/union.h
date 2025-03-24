@@ -80,14 +80,14 @@ public:
         return *this;
     }
 
-    explicit operator bool() {
-        return std::visit([](const auto& arg) {
+    explicit operator bool() const {
+        return std::visit([](const auto& arg) -> bool {
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, Undefined>) {
                 return false;
             }
             else {
-                return true;
+                return arg;
             }
         }, value);
     }
