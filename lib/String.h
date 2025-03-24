@@ -17,3 +17,11 @@ public:
         }
     } _fromCharCode;
 } _String;
+
+std::string operator+(const std::string& a, double b) {
+    return a + std::to_string(b);
+}
+
+std::string operator+(double a, const std::string& b) {
+    return std::to_string(a) + b;
+}
