@@ -75,11 +75,16 @@ public:
     Union& operator=(T&& arg) {
         if constexpr (std::is_same_v<std::decay_t<T>, Union>) {
             value = arg.value;
-        } else if constexpr (IsUnion<std::decay_t<T>>::value) {
+        }
+        else if constexpr (IsUnion<std::decay_t<T>>::value) {
             visit([this](auto& arg) {
                 value = arg;
             }, arg.value);
-        } else {
+        }
+        else if constexpr (contains_type_v<double, Types...> && std::is_same_v<std::decay_t<T>, int64_t>) {
+            value = (double)arg;
+        }
+        else {
             value = arg;
         }
         return *this;
