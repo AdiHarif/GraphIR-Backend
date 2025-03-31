@@ -13,6 +13,8 @@ public:
     DynamicArray() = default;
     DynamicArray(size_t size): data(std::make_shared<std::vector<T>>(size)) {}
     DynamicArray(std::initializer_list<T> list): data(std::make_shared<std::vector<T>>(list)) {}
+    template <typename S>
+    DynamicArray(const DynamicArray<S>& other): data(std::make_shared<std::vector<T>>(other.data->begin(), other.data->end())) {}
 
     T& operator[](size_t i) {
         return data->at(i);
@@ -38,5 +40,8 @@ public:
         }
         return s.str();
     }
+
+    template <typename S>
+    friend class DynamicArray;
 };
 
