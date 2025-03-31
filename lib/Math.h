@@ -37,4 +37,24 @@ public:
         }
     } _min;
 
+    class sin {
+    public:
+        template <typename T>
+        double operator()(const T& t) {
+            return std::sin(t);
+        }
+    } _sin;
+
+    class cos {
+    public:
+        template <typename T>
+        double operator()(const T& t) {
+            return std::cos(t);
+        }
+    } _cos;
+
+    double _PI = M_PI;
+
 } _Math;
+
+const double Infinity = std::numeric_limits<double>::infinity();
