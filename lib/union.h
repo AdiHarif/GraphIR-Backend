@@ -153,6 +153,16 @@ public:
         }, value);
     }
 
+    size_t size() {
+        return std::visit([](auto& arg) -> size_t {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (IsDynamicArray<T>::value || std::is_same_v<T, std::string>) {
+                return arg.size();
+            }
+            throw std::bad_variant_access();
+        }, value);
+    }
+
     template <typename... Types1, typename... S>
     friend bool operator==(const Union<Types1...>& u1, const Union<S...>& u2);
 
