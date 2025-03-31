@@ -20,7 +20,11 @@ bool _strictEquals(const T& a, const T& b) {
     return a == b;
 }
 
-template <typename T>
-bool _strictNotEquals(const T& a, const T& b) {
-    return a != b;
+bool _strictEquals(int64_t a, Undefined b) {
+    return false;
+}
+
+template <typename T, typename S>
+bool _strictNotEquals(const T& a, const S& b) {
+    return !_strictEquals(a, b);
 }
