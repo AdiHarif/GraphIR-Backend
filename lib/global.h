@@ -3,8 +3,10 @@
 #include <cstdint>
 #include <stdexcept>
 
-int64_t parseInt(const std::string& s) {
-    return std::stol(s);
+#include "union.h"
+
+int64_t parseInt(const std::string& s, int base = 10) {
+    return std::stol(s, nullptr, base);
 }
 
 void assert(bool b) {
