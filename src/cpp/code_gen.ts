@@ -202,6 +202,21 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
                 return [CppCodeGenVisitor.createRefAssignmentStatement(name, right)];
             }
         }
+        else if (vertex.object!.verifiedType instanceof ir.ObjectType || (vertex.object!.verifiedType instanceof ir.UnionType && vertex.object!.verifiedType.types.some(t => t instanceof ir.ObjectType))) {
+            const objectExpression: expr.Expr = this.createValueExpression(vertex.object!);
+            let propName: string;
+            if (vertex.property instanceof ir.StaticSymbolVertex) {
+                propName = vertex.property.name;
+            }
+            else {
+                assert(vertex.property instanceof ir.LiteralVertex && vertex.property.verifiedType instanceof ir.StaticStringType);
+                propName = vertex.property.value as string;
+            }
+            if (vertex.verifiedType instanceof ir.DynamicArrayType || (vertex.verifiedType instanceof ir.UnionType && vertex.verifiedType.types.some(t => t instanceof ir.DynamicArrayType))) {
+                return [CppCodeGenVisitor.createRefAssignmentStatement(name, new expr.SubscriptExpr(objectExpression, new expr.LiteralExpr(propName)))];
+            }
+            right = new expr.SubscriptExpr(objectExpression, new expr.LiteralExpr(propName));
+        }
         else if (vertex.object instanceof ir.StaticSymbolVertex && vertex.property instanceof ir.StaticSymbolVertex) {
             if (vertex.object.name === '_globals') {
                 right = new expr.MemberAccessExpr(new expr.IdentifierExpr('_globals'), vertex.property.name);
