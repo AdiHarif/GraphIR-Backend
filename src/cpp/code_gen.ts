@@ -49,13 +49,16 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
 
     visitUnaryOperationVertex(vertex: ir.UnaryOperationVertex): Array<AstNode> {
         const name = this.namesMap.get(vertex)!;
-        const operandValue = this.createValueExpression(vertex.operand!);
+        let operandValue = this.createValueExpression(vertex.operand!);
         let exprValue: expr.Expr;
         if (vertex.operator === '--' || vertex.operator === '++') {
             const op = vertex.operator === '--' ? '-' : '+';
             exprValue = new expr.BinaryOperationExpr(op, operandValue, new expr.LiteralExpr(1));
         }
         else {
+            if (vertex.operator === '~') {
+                operandValue = new expr.CastingExpr(new type.IntType(64), operandValue);
+            }
             exprValue = new expr.PrefixUnaryOperationExpr(vertex.operator, operandValue);
         }
         return [CppCodeGenVisitor.createOwningAssignmentStatement(name, exprValue)];
@@ -73,15 +76,22 @@ class CppCodeGenVisitor implements ir.VertexVisitor<Array<AstNode>> {
         }
         else if (vertex.operator === '>>>') {
             op = '>>';
-            leftValue = new expr.CastingExpr(new type.UnsignedIntType(64), leftValue);
+            leftValue = new expr.CastingExpr(new type.UnsignedIntType(32), leftValue);
             rightValue = new expr.CastingExpr(new type.IntType(64), rightValue);
         }
         else if (vertex.operator === '===' || vertex.operator === '!==') {
-            const functionName = "_strictEquals";
+            const functionName = vertex.operator === "===" ? "_strictEquals" : "_strictNotEquals"; ;
+
             const call = new expr.CallExpr(functionName, [leftValue, rightValue]);
             return [CppCodeGenVisitor.createOwningAssignmentStatement(name, call)]
         }
-        const exprValue = new expr.BinaryOperationExpr(op, leftValue, rightValue);
+        else if (vertex.operator === '/') {
+            leftValue = new expr.CastingExpr(new type.FloatType(64), leftValue);
+        }
+        let exprValue: expr.Expr = new expr.BinaryOperationExpr(op, leftValue, rightValue);
+        if (['<<', '>>', '>>>', '&', '|', '^'].includes(vertex.operator)) {
+            exprValue = new expr.CastingExpr(new type.IntType(32), exprValue);
+        }
         return [CppCodeGenVisitor.createOwningAssignmentStatement(name, exprValue)];
     }
 
