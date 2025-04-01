@@ -44,6 +44,11 @@ public:
         return s.str();
     }
 
+    int64_t push(const T& value) {
+        data->push_back(value);
+        return data->size() - 1;
+    }
+
     template <typename S>
     friend class DynamicArray;
 };
