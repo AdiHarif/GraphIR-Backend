@@ -1,5 +1,9 @@
 
+#pragma once
+
 #include <string>
+
+#include "global.h"
 
 class String {
 public:
@@ -16,6 +20,14 @@ public:
             return std::string(1, t);
         }
     } _fromCharCode;
+
+    class indexOf {
+    public:
+        size_t operator()(const std::string& str, const std::string& searchStr, size_t fromIndex = 0) {
+            return str.find(searchStr, fromIndex);
+        }
+    } _indexOf;
+
 } _String;
 
 std::string operator+(const std::string& a, double b) {
@@ -24,4 +36,19 @@ std::string operator+(const std::string& a, double b) {
 
 std::string operator+(double a, const std::string& b) {
     return std::to_string(a) + b;
+}
+
+bool operator<(const std::string& a, int64_t b) {
+    return parseInt(a) < b;
+}
+
+bool operator<(int64_t a, const std::string& b) {
+    return a < parseInt(b);
+}
+
+bool operator>(const std::string& a, int64_t b) {
+    return parseInt(a) > b;
+}
+bool operator>(int64_t a, const std::string& b) {
+    return a > parseInt(b);
 }

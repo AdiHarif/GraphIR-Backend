@@ -4,7 +4,9 @@
 #include <string>
 #include <variant>
 #include <ostream>
+#include <cmath>
 
+#include "Object.h"
 #include "DynamicArray.h"
 
 template <typename T, typename... Ts>
@@ -12,6 +14,44 @@ constexpr bool contains_type_v = std::disjunction_v<std::is_same<T, Ts>...>;
 
 using Undefined = std::monostate;
 using Null = std::monostate;
+
+template <typename T>
+double operator+(const T&, Undefined) {
+    return NAN;
+}
+
+template <typename T>
+double operator+(Undefined, const T&) {
+    return NAN;
+}
+
+double operator+(Undefined, Undefined) {
+    return NAN;
+}
+
+template <typename T>
+double operator*(const T&, Undefined) {
+    return NAN;
+}
+
+template <typename T>
+double operator*(Undefined, const T&) {
+    return NAN;
+}
+
+double operator*(Undefined, Undefined) {
+    return NAN;
+}
+
+template <typename T>
+bool operator<(const T&, Undefined) {
+    return false;
+}
+
+template <typename T>
+bool operator<(Undefined, const T&) {
+    return false;
+}
 
 template <typename... Types>
 class Union {
@@ -38,6 +78,11 @@ class Union {
         using t = char;
     };
 
+    template<typename T, typename... Ts>
+    struct _GetElementTypes<Object<T>, Ts...> {
+        using t = T&;
+    };
+
     template<>
     struct _GetElementTypes<> {
         using t = Undefined;
@@ -56,12 +101,18 @@ class Union {
     struct IsDynamicArray<DynamicArray<T>> : std::true_type {};
 
     template <typename T>
+    struct IsObject : std::false_type {};
+
+    template <typename T>
+    struct IsObject<Object<T>> : std::true_type {};
+
+public:
+    template <typename T>
     struct IsUnion : std::false_type {};
 
     template <typename... Ts>
     struct IsUnion<Union<Ts...>> : std::true_type {};
 
-public:
     Union() : value() {
         if constexpr (contains_type_v<Undefined, Types...>) {
             value = Undefined();
@@ -71,6 +122,18 @@ public:
     template <typename T>
     Union(const T& arg) : value(arg) {}
 
+    Union(int64_t arg) {
+        if constexpr (contains_type_v<int64_t, Types...>) {
+            value = arg;
+        }
+        else if constexpr (contains_type_v<double, Types...>) {
+            value = static_cast<double>(arg);
+        }
+        else {
+            throw std::bad_variant_access();
+        }
+    }
+
     template <typename T>
     Union& operator=(T&& arg) {
         if constexpr (std::is_same_v<std::decay_t<T>, Union>) {
@@ -78,7 +141,13 @@ public:
         }
         else if constexpr (IsUnion<std::decay_t<T>>::value) {
             visit([this](auto& arg) {
-                value = arg;
+                using U = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<U, int64_t> && contains_type_v<double, Types...>) {
+                    value = static_cast<double>(arg);
+                }
+                else {
+                    value = arg;
+                }
             }, arg.value);
         }
         else if constexpr (contains_type_v<double, Types...> && std::is_same_v<std::decay_t<T>, int64_t>) {
@@ -108,6 +177,9 @@ public:
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, Undefined>) {
                 return false;
+            }
+            else if constexpr (IsObject<T>::value) {
+                return true;
             }
             else {
                 return arg;
@@ -153,6 +225,16 @@ public:
         }, value);
     }
 
+    ElementType operator[](const char* prop) {
+        return std::visit([prop](auto& arg) -> ElementType {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (IsObject<T>::value) {
+                return arg[prop];
+            }
+            throw std::bad_variant_access();
+        }, value);
+    }
+
     size_t size() {
         return std::visit([](auto& arg) -> size_t {
             using T = std::decay_t<decltype(arg)>;
@@ -166,6 +248,9 @@ public:
     template <typename... Types1, typename... S>
     friend bool operator==(const Union<Types1...>& u1, const Union<S...>& u2);
 
+    template <typename T, typename... S>
+    friend bool operator<(const T& lhs, const Union<S...>& u2);
+
     template <typename... Ts1, typename... Ts2>
     friend auto operator+(const Union<Ts1...>& u, const Union<Ts2...>& v);
 
@@ -174,6 +259,9 @@ public:
 
     template <typename... OtherTypes>
     friend class Union;
+
+    template <typename T, typename S>
+    friend bool _strictEquals(const T& a, const S& b);
 };
 
 
@@ -226,12 +314,22 @@ auto operator+(const Union<Ts1...>& u, const Union<Ts2...>& v) {
 }
 
 template <typename... Types>
-auto operator+(const Union<Types...>& u, double n) {
+double operator+(const Union<Types...>& u, double n) {
     return (double)u + n;
 }
 
 template <typename... Types>
-auto operator+(const Union<Types...>& u, int64_t n) {
+double operator+(double n, const Union<Types...>& u) {
+    return (double)u + n;
+}
+
+template <typename... Types>
+double operator+(const Union<Types...>& u, int64_t n) {
+    return (double)u + n;
+}
+
+template <typename... Types>
+double operator+(const Union<Types...>& u, int32_t n) {
     return (double)u + n;
 }
 
@@ -248,6 +346,25 @@ bool operator==(const Union<Types1...>& u1, const Union<S...>& u2) {
 template <typename... Types1, typename... S>
 bool operator!=(const Union<Types1...>& u1, const Union<S...>& u2) {
     return !(u1 == u2);
+}
+
+template <typename T, typename... Types>
+bool operator<(const T& lhs, const Union<Types...>& u2) {
+    if constexpr (Union<T>::template IsUnion<std::decay_t<T>>::value) {
+        return std::visit([&u2](const auto& arg) {
+            return arg < u2;
+        }, lhs.value);
+    }
+    else {
+        return std::visit([&lhs](const auto& arg) {
+            return lhs < arg;
+        }, u2.value);
+    }
+}
+
+template <typename T, typename S>
+bool operator>(const T& lhs, const S& rhs) {
+    return rhs < lhs;
 }
 
 std::ostream& operator<<(std::ostream& os, const Undefined&) {

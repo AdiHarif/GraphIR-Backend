@@ -17,7 +17,10 @@ public:
     DynamicArray(const DynamicArray<S>& other): data(std::make_shared<std::vector<T>>(other.data->begin(), other.data->end())) {}
 
     T& operator[](size_t i) {
-        return data->at(i);
+        if (i >= data->size()) {
+            data->resize(i + 1);
+        }
+        return (*data)[i];
     }
 
     size_t size() const {
@@ -39,6 +42,11 @@ public:
             s << data->at(i);
         }
         return s.str();
+    }
+
+    int64_t push(const T& value) {
+        data->push_back(value);
+        return data->size() - 1;
     }
 
     template <typename S>

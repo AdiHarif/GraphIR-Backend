@@ -83,6 +83,8 @@ export function generateCpp(graph: ir.Graph, config?: BackendConfig): string {
         if (!statement) {
             continue;
         }
+        let debugInfo = `// ${vertex.id}`;
+        cpp_function.body.statements.push(debugInfo);
         cpp_function.body.statements.push(...statement);
     }
     if (function_name === 'main') {
