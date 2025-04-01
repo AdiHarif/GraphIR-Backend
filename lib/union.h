@@ -4,6 +4,7 @@
 #include <string>
 #include <variant>
 #include <ostream>
+#include <cmath>
 
 #include "DynamicArray.h"
 
@@ -12,6 +13,44 @@ constexpr bool contains_type_v = std::disjunction_v<std::is_same<T, Ts>...>;
 
 using Undefined = std::monostate;
 using Null = std::monostate;
+
+template <typename T>
+double operator+(const T&, Undefined) {
+    return NAN;
+}
+
+template <typename T>
+double operator+(Undefined, const T&) {
+    return NAN;
+}
+
+double operator+(Undefined, Undefined) {
+    return NAN;
+}
+
+template <typename T>
+double operator*(const T&, Undefined) {
+    return NAN;
+}
+
+template <typename T>
+double operator*(Undefined, const T&) {
+    return NAN;
+}
+
+double operator*(Undefined, Undefined) {
+    return NAN;
+}
+
+template <typename T>
+bool operator<(const T&, Undefined) {
+    return false;
+}
+
+template <typename T>
+bool operator<(Undefined, const T&) {
+    return false;
+}
 
 template <typename... Types>
 class Union {
