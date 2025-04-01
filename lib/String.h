@@ -20,6 +20,14 @@ public:
             return std::string(1, t);
         }
     } _fromCharCode;
+
+    class indexOf {
+    public:
+        size_t operator()(const std::string& str, const std::string& searchStr, size_t fromIndex = 0) {
+            return str.find(searchStr, fromIndex);
+        }
+    } _indexOf;
+
 } _String;
 
 std::string operator+(const std::string& a, double b) {
