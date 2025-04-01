@@ -174,6 +174,9 @@ public:
 
     template <typename... OtherTypes>
     friend class Union;
+
+    template <typename T, typename S>
+    friend bool _strictEquals(const T& a, const S& b);
 };
 
 
