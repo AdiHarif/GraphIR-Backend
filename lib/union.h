@@ -248,6 +248,9 @@ public:
     template <typename... Types1, typename... S>
     friend bool operator==(const Union<Types1...>& u1, const Union<S...>& u2);
 
+    template <typename T, typename... S>
+    friend bool operator<(const T& lhs, const Union<S...>& u2);
+
     template <typename... Ts1, typename... Ts2>
     friend auto operator+(const Union<Ts1...>& u, const Union<Ts2...>& v);
 
@@ -343,6 +346,25 @@ bool operator==(const Union<Types1...>& u1, const Union<S...>& u2) {
 template <typename... Types1, typename... S>
 bool operator!=(const Union<Types1...>& u1, const Union<S...>& u2) {
     return !(u1 == u2);
+}
+
+template <typename T, typename... Types>
+bool operator<(const T& lhs, const Union<Types...>& u2) {
+    if constexpr (Union<T>::template IsUnion<std::decay_t<T>>::value) {
+        return std::visit([&u2](const auto& arg) {
+            return arg < u2;
+        }, lhs.value);
+    }
+    else {
+        return std::visit([&lhs](const auto& arg) {
+            return lhs < arg;
+        }, u2.value);
+    }
+}
+
+template <typename T, typename S>
+bool operator>(const T& lhs, const S& rhs) {
+    return rhs < lhs;
 }
 
 std::ostream& operator<<(std::ostream& os, const Undefined&) {
