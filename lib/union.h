@@ -6,6 +6,7 @@
 #include <ostream>
 #include <cmath>
 
+#include "Object.h"
 #include "DynamicArray.h"
 
 template <typename T, typename... Ts>
@@ -77,6 +78,11 @@ class Union {
         using t = char;
     };
 
+    template<typename T, typename... Ts>
+    struct _GetElementTypes<Object<T>, Ts...> {
+        using t = T&;
+    };
+
     template<>
     struct _GetElementTypes<> {
         using t = Undefined;
@@ -95,12 +101,18 @@ class Union {
     struct IsDynamicArray<DynamicArray<T>> : std::true_type {};
 
     template <typename T>
+    struct IsObject : std::false_type {};
+
+    template <typename T>
+    struct IsObject<Object<T>> : std::true_type {};
+
+public:
+    template <typename T>
     struct IsUnion : std::false_type {};
 
     template <typename... Ts>
     struct IsUnion<Union<Ts...>> : std::true_type {};
 
-public:
     Union() : value() {
         if constexpr (contains_type_v<Undefined, Types...>) {
             value = Undefined();
@@ -148,6 +160,9 @@ public:
             if constexpr (std::is_same_v<T, Undefined>) {
                 return false;
             }
+            else if constexpr (IsObject<T>::value) {
+                return true;
+            }
             else {
                 return arg;
             }
@@ -187,6 +202,16 @@ public:
             using T = std::decay_t<decltype(arg)>;
             if constexpr (IsDynamicArray<T>::value || std::is_same_v<T, std::string>) {
                 return arg[index];
+            }
+            throw std::bad_variant_access();
+        }, value);
+    }
+
+    ElementType operator[](const char* prop) {
+        return std::visit([prop](auto& arg) -> ElementType {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (IsObject<T>::value) {
+                return arg[prop];
             }
             throw std::bad_variant_access();
         }, value);
