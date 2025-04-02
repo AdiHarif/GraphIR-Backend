@@ -122,6 +122,18 @@ public:
     template <typename T>
     Union(const T& arg) : value(arg) {}
 
+    Union(int64_t arg) {
+        if constexpr (contains_type_v<int64_t, Types...>) {
+            value = arg;
+        }
+        else if constexpr (contains_type_v<double, Types...>) {
+            value = static_cast<double>(arg);
+        }
+        else {
+            throw std::bad_variant_access();
+        }
+    }
+
     template <typename T>
     Union& operator=(T&& arg) {
         if constexpr (std::is_same_v<std::decay_t<T>, Union>) {
@@ -129,7 +141,13 @@ public:
         }
         else if constexpr (IsUnion<std::decay_t<T>>::value) {
             visit([this](auto& arg) {
-                value = arg;
+                using U = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<U, int64_t> && contains_type_v<double, Types...>) {
+                    value = static_cast<double>(arg);
+                }
+                else {
+                    value = arg;
+                }
             }, arg.value);
         }
         else if constexpr (contains_type_v<double, Types...> && std::is_same_v<std::decay_t<T>, int64_t>) {
@@ -293,12 +311,22 @@ auto operator+(const Union<Ts1...>& u, const Union<Ts2...>& v) {
 }
 
 template <typename... Types>
-auto operator+(const Union<Types...>& u, double n) {
+double operator+(const Union<Types...>& u, double n) {
     return (double)u + n;
 }
 
 template <typename... Types>
-auto operator+(const Union<Types...>& u, int64_t n) {
+double operator+(double n, const Union<Types...>& u) {
+    return (double)u + n;
+}
+
+template <typename... Types>
+double operator+(const Union<Types...>& u, int64_t n) {
+    return (double)u + n;
+}
+
+template <typename... Types>
+double operator+(const Union<Types...>& u, int32_t n) {
     return (double)u + n;
 }
 
